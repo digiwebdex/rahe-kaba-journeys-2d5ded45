@@ -5,7 +5,9 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Printer, DollarSign, TrendingUp, TrendingDown, Clock } from "lucide-react";
+import { Printer, DollarSign, TrendingUp, TrendingDown, Clock, Download } from "lucide-react";
+import { generateInvoice, generateReceipt, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
+import { toast } from "sonner";
 
 interface CustomerFinancialReportProps {
   customer: any;
@@ -18,6 +20,36 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
   const [payments, setPayments] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+
+  const getCompanyInfo = async (): Promise<CompanyInfo> => {
+    const { data: cms } = await supabase.from("site_content" as any).select("content").eq("section_key", "contact").maybeSingle();
+    const c = (cms as any)?.content || {};
+    return { name: "RAHE KABA", phone: c.phone || "", email: c.email || "", address: c.location || "" };
+  };
+
+  const handleInvoice = async (b: any) => {
+    setGeneratingPdf(b.id);
+    try {
+      const bPayments = payments.filter((p) => p.booking_id === b.id);
+      const company = await getCompanyInfo();
+      await generateInvoice(b, customer, bPayments as InvoicePayment[], company);
+      toast.success("Invoice downloaded");
+    } catch { toast.error("Failed"); }
+    setGeneratingPdf(null);
+  };
+
+  const handleReceipt = async (p: any) => {
+    setGeneratingPdf(p.id);
+    try {
+      const booking = bookings.find((b) => b.id === p.booking_id);
+      const allBPayments = payments.filter((pm) => pm.booking_id === p.booking_id);
+      const company = await getCompanyInfo();
+      await generateReceipt(p as InvoicePayment, booking || {}, customer, company, allBPayments as InvoicePayment[]);
+      toast.success("Receipt downloaded");
+    } catch { toast.error("Failed"); }
+    setGeneratingPdf(null);
+  };
 
   useEffect(() => {
     if (!open || !customer) return;
@@ -169,6 +201,7 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
                     <TableHead>Paid</TableHead>
                     <TableHead>Due</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -185,11 +218,21 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
                           {b.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <button
+                          onClick={() => handleInvoice(b)}
+                          disabled={generatingPdf === b.id}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+                        >
+                          <Download className="h-3 w-3" />
+                          {generatingPdf === b.id ? "..." : "Invoice"}
+                        </button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {bookings.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">No bookings</TableCell>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground">No bookings</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -208,6 +251,7 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
                     <TableHead>Due Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Paid Date</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -223,11 +267,23 @@ export default function CustomerFinancialReport({ customer, open, onOpenChange }
                         </Badge>
                       </TableCell>
                       <TableCell>{p.paid_at ? new Date(p.paid_at).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell>
+                        {p.status === "completed" && (
+                          <button
+                            onClick={() => handleReceipt(p)}
+                            disabled={generatingPdf === p.id}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+                          >
+                            <Download className="h-3 w-3" />
+                            {generatingPdf === p.id ? "..." : "Receipt"}
+                          </button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {payments.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">No payments</TableCell>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">No payments</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

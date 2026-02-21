@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   LogOut, Package, CreditCard, AlertTriangle, User, FileText,
-  ChevronDown, ChevronUp, Search, Save, MapPin, Phone, Mail, Settings
+  ChevronDown, ChevronUp, Search, Save, MapPin, Phone, Mail, Settings, Download
 } from "lucide-react";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.jpg";
 import DocumentUpload from "@/components/DocumentUpload";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import { generateInvoice, generateReceipt, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
 
 interface Booking {
   id: string;
@@ -125,6 +126,8 @@ const Dashboard = () => {
     setSavingProfile(false);
   };
 
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+
   const totalDue = bookings.reduce((sum, b) => sum + Number(b.due_amount || 0), 0);
   const totalPaid = bookings.reduce((sum, b) => sum + Number(b.paid_amount || 0), 0);
   const totalAmount = bookings.reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
@@ -135,6 +138,33 @@ const Dashboard = () => {
   const getBookingPayments = (bookingId: string) =>
     payments.filter((p) => p.booking_id === bookingId).sort((a, b) => (a.installment_number || 0) - (b.installment_number || 0));
 
+  const getCompanyInfo = async (): Promise<CompanyInfo> => {
+    const { data: cms } = await supabase.from("site_content" as any).select("content").eq("section_key", "contact").maybeSingle();
+    const c = (cms as any)?.content || {};
+    return { name: "RAHE KABA", phone: c.phone || "", email: c.email || "", address: c.location || "" };
+  };
+
+  const handleDownloadInvoice = async (b: any) => {
+    setGeneratingPdf(b.id);
+    try {
+      const bPayments = getBookingPayments(b.id);
+      const company = await getCompanyInfo();
+      await generateInvoice(b, profile || {}, bPayments as InvoicePayment[], company);
+      toast.success("Invoice downloaded");
+    } catch { toast.error("Failed to generate invoice"); }
+    setGeneratingPdf(null);
+  };
+
+  const handleDownloadReceipt = async (p: Payment, b: any) => {
+    setGeneratingPdf(p.id);
+    try {
+      const company = await getCompanyInfo();
+      const allBPayments = getBookingPayments(p.booking_id);
+      await generateReceipt(p as InvoicePayment, b, profile || {}, company, allBPayments as InvoicePayment[]);
+      toast.success("Receipt downloaded");
+    } catch { toast.error("Failed to generate receipt"); }
+    setGeneratingPdf(null);
+  };
   const statusColor = (s: string) => {
     switch (s) {
       case "completed": return "text-emerald bg-emerald/10";
@@ -390,6 +420,16 @@ const Dashboard = () => {
                         />
                       </div>
                     )}
+
+                    {/* Download Invoice */}
+                    <button
+                      onClick={() => handleDownloadInvoice(b)}
+                      disabled={generatingPdf === b.id}
+                      className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary hover:underline disabled:opacity-50"
+                    >
+                      <Download className="h-4 w-4" />
+                      {generatingPdf === b.id ? "Generating..." : "Download Invoice"}
+                    </button>
                   </motion.div>
                 );
               })
@@ -415,7 +455,8 @@ const Dashboard = () => {
                       <th className="pb-3 pr-4">Due Date</th>
                       <th className="pb-3 pr-4">Paid At</th>
                       <th className="pb-3 pr-4">Status</th>
-                      <th className="pb-3">Method</th>
+                      <th className="pb-3 pr-4">Method</th>
+                      <th className="pb-3"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -430,7 +471,19 @@ const Dashboard = () => {
                             {p.status}
                           </span>
                         </td>
-                        <td className="py-3 capitalize">{p.payment_method || "—"}</td>
+                        <td className="py-3 pr-4 capitalize">{p.payment_method || "—"}</td>
+                        <td className="py-3">
+                          {p.status === "completed" && (
+                            <button
+                              onClick={() => handleDownloadReceipt(p, bookings.find((b) => b.id === p.booking_id))}
+                              disabled={generatingPdf === p.id}
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+                            >
+                              <Download className="h-3 w-3" />
+                              {generatingPdf === p.id ? "..." : "Receipt"}
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

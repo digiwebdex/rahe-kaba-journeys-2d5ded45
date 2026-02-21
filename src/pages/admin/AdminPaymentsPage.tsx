@@ -1,18 +1,65 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { generateReceipt, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
-  const fetch = () => supabase.from("payments").select("*, bookings(tracking_id)").order("created_at", { ascending: false }).then(({ data }) => setPayments(data || []));
-  useEffect(() => { fetch(); }, []);
+  const fetchPayments = () => supabase.from("payments").select("*, bookings(tracking_id, total_amount, paid_amount, due_amount, num_travelers, created_at, status, package_id, user_id, packages(name, type, duration_days))").order("created_at", { ascending: false }).then(({ data }) => setPayments(data || []));
+  useEffect(() => { fetchPayments(); }, []);
 
   const markPaid = async (id: string) => {
     const { error } = await supabase.from("payments").update({ status: "completed", paid_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Payment marked as completed");
-    fetch();
+    fetchPayments();
+  };
+
+  const handleReceipt = async (p: any) => {
+    setGeneratingId(p.id);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, passport_number, address")
+        .eq("user_id", p.user_id)
+        .maybeSingle();
+
+      const { data: allPayments } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("booking_id", p.booking_id);
+
+      const { data: cms } = await supabase
+        .from("site_content" as any)
+        .select("content")
+        .eq("section_key", "contact")
+        .maybeSingle();
+
+      const cmsContent = (cms as any)?.content || {};
+      const company: CompanyInfo = {
+        name: "RAHE KABA",
+        phone: cmsContent.phone || "",
+        email: cmsContent.email || "",
+        address: cmsContent.location || "",
+      };
+
+      const booking = p.bookings || {};
+
+      await generateReceipt(
+        p as InvoicePayment,
+        { ...booking, packages: booking.packages },
+        profile || {},
+        company,
+        (allPayments || []) as InvoicePayment[]
+      );
+      toast.success("Receipt downloaded");
+    } catch {
+      toast.error("Failed to generate receipt");
+    }
+    setGeneratingId(null);
   };
 
   return (
@@ -43,9 +90,21 @@ export default function AdminPaymentsPage() {
                   </span>
                 </td>
                 <td className="py-3">
-                  {p.status === "pending" && (
-                    <button onClick={() => markPaid(p.id)} className="text-xs text-primary hover:underline">Mark Paid</button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {p.status === "pending" && (
+                      <button onClick={() => markPaid(p.id)} className="text-xs text-primary hover:underline">Mark Paid</button>
+                    )}
+                    {p.status === "completed" && (
+                      <button
+                        onClick={() => handleReceipt(p)}
+                        disabled={generatingId === p.id}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+                      >
+                        <Download className="h-3 w-3" />
+                        {generatingId === p.id ? "..." : "Receipt"}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

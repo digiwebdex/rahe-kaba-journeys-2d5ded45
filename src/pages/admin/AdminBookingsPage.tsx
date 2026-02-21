@@ -1,13 +1,53 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { generateInvoice, CompanyInfo, InvoicePayment } from "@/lib/invoiceGenerator";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.from("bookings").select("*, packages(name, type), profiles(full_name)").order("created_at", { ascending: false })
+    supabase.from("bookings").select("*, packages(name, type, duration_days), profiles(full_name, phone, passport_number, address)").order("created_at", { ascending: false })
       .then(({ data }) => setBookings(data || []));
   }, []);
+
+  const handleDownloadInvoice = async (b: any) => {
+    setGeneratingId(b.id);
+    try {
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("booking_id", b.id)
+        .order("installment_number", { ascending: true });
+
+      const { data: cms } = await supabase
+        .from("site_content" as any)
+        .select("content")
+        .eq("section_key", "contact")
+        .maybeSingle();
+
+      const cmsContent = (cms as any)?.content || {};
+      const company: CompanyInfo = {
+        name: "RAHE KABA",
+        phone: cmsContent.phone || "",
+        email: cmsContent.email || "",
+        address: cmsContent.location || "",
+      };
+
+      await generateInvoice(
+        { ...b, packages: b.packages },
+        b.profiles || {},
+        (payments || []) as InvoicePayment[],
+        company
+      );
+      toast.success("Invoice downloaded");
+    } catch (err: any) {
+      toast.error("Failed to generate invoice");
+    }
+    setGeneratingId(null);
+  };
 
   return (
     <div className="space-y-3">
@@ -27,6 +67,16 @@ export default function AdminBookingsPage() {
             <div><p className="text-muted-foreground">Total</p><p className="font-medium">৳{Number(b.total_amount).toLocaleString()}</p></div>
             <div><p className="text-muted-foreground">Paid</p><p className="font-medium">৳{Number(b.paid_amount).toLocaleString()}</p></div>
             <div><p className="text-muted-foreground">Due</p><p className="font-medium text-destructive">৳{Number(b.due_amount || 0).toLocaleString()}</p></div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <button
+              onClick={() => handleDownloadInvoice(b)}
+              disabled={generatingId === b.id}
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline disabled:opacity-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              {generatingId === b.id ? "Generating..." : "Download Invoice"}
+            </button>
           </div>
         </div>
       ))}
