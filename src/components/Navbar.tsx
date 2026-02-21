@@ -3,6 +3,7 @@ import { Menu, X, Phone, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.jpg";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const navLinks = [
   { label: "Home", href: "#home" },
@@ -16,6 +17,10 @@ const navLinks = [
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const { data: content } = useSiteContent("navbar");
+
+  const phone = content?.phone || "+880 1601-505050";
+  const ctaText = content?.cta_text || "Book Now";
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -49,9 +54,9 @@ const Navbar = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
-          <a href="tel:+8801601505050" className="flex items-center gap-2 text-sm text-primary">
+          <a href={`tel:${phone.replace(/[\s-]/g, "")}`} className="flex items-center gap-2 text-sm text-primary">
             <Phone className="h-4 w-4" />
-            +880 1601-505050
+            {phone}
           </a>
           {user ? (
             <a href="/dashboard" className="flex items-center gap-2 text-sm text-primary border border-primary/40 px-4 py-2.5 rounded-md hover:bg-primary/10 transition-colors">
@@ -68,7 +73,7 @@ const Navbar = () => {
             href="#packages"
             className="bg-gradient-gold text-primary-foreground font-semibold px-6 py-2.5 rounded-md text-sm hover:opacity-90 transition-opacity"
           >
-            Book Now
+            {ctaText}
           </a>
         </div>
       </div>
@@ -97,7 +102,7 @@ const Navbar = () => {
                 onClick={() => setOpen(false)}
                 className="bg-gradient-gold text-primary-foreground font-semibold px-6 py-3 rounded-md text-sm text-center"
               >
-                Book Now
+                {ctaText}
               </a>
             </div>
           </motion.div>

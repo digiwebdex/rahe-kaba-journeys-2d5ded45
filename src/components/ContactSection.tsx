@@ -1,7 +1,25 @@
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const ContactSection = () => {
+  const { data: content } = useSiteContent("contact");
+
+  const sectionLabel = content?.section_label || "Get In Touch";
+  const heading = content?.heading || "Contact";
+  const headingHighlight = content?.heading_highlight || "Us";
+  const phone = content?.phone || "+880 1601-505050";
+  const email = content?.email || "rahekaba.info@gmail.com";
+  const location = content?.location || "Chittagong, Bangladesh";
+  const hours = content?.hours || "Sat - Thu: 9AM - 9PM";
+
+  const contactItems = [
+    { icon: Phone, label: "Phone", value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
+    { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
+    { icon: MapPin, label: "Location", value: location, href: "#" },
+    { icon: Clock, label: "Hours", value: hours, href: "#" },
+  ];
+
   return (
     <section id="contact" className="py-24 bg-card">
       <div className="container mx-auto px-4">
@@ -11,9 +29,9 @@ const ContactSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">Get In Touch</span>
+          <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">{sectionLabel}</span>
           <h2 className="font-heading text-3xl md:text-5xl font-bold mt-3 mb-4">
-            Contact <span className="text-gradient-gold">Us</span>
+            {heading} <span className="text-gradient-gold">{headingHighlight}</span>
           </h2>
         </motion.div>
 
@@ -24,12 +42,7 @@ const ContactSection = () => {
             viewport={{ once: true }}
             className="space-y-6"
           >
-            {[
-              { icon: Phone, label: "Phone", value: "+880 1601-505050", href: "tel:+8801601505050" },
-              { icon: Mail, label: "Email", value: "rahekaba.info@gmail.com", href: "mailto:rahekaba.info@gmail.com" },
-              { icon: MapPin, label: "Location", value: "Chittagong, Bangladesh", href: "#" },
-              { icon: Clock, label: "Hours", value: "Sat - Thu: 9AM - 9PM", href: "#" },
-            ].map((item) => (
+            {contactItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
