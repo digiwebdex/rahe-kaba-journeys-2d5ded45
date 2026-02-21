@@ -118,6 +118,161 @@ export type Database = {
           },
         ]
       }
+      hotel_bookings: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          guests: number
+          hotel_id: string
+          id: string
+          notes: string | null
+          room_id: string
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          guests?: number
+          hotel_id: string
+          id?: string
+          notes?: string | null
+          room_id: string
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          guests?: number
+          hotel_id?: string
+          id?: string
+          notes?: string | null
+          room_id?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_bookings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_rooms: {
+        Row: {
+          amenities: Json | null
+          capacity: number
+          created_at: string
+          description: string | null
+          hotel_id: string
+          id: string
+          image_url: string | null
+          is_available: boolean
+          name: string
+          price_per_night: number
+        }
+        Insert: {
+          amenities?: Json | null
+          capacity?: number
+          created_at?: string
+          description?: string | null
+          hotel_id: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          name: string
+          price_per_night: number
+        }
+        Update: {
+          amenities?: Json | null
+          capacity?: number
+          created_at?: string
+          description?: string | null
+          hotel_id?: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          name?: string
+          price_per_night?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_rooms_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotels: {
+        Row: {
+          amenities: Json | null
+          city: string
+          created_at: string
+          description: string | null
+          distance_to_haram: string | null
+          gallery: Json | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          location: string
+          name: string
+          star_rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          amenities?: Json | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          distance_to_haram?: string | null
+          gallery?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location: string
+          name: string
+          star_rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amenities?: Json | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          distance_to_haram?: string | null
+          gallery?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location?: string
+          name?: string
+          star_rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       installment_plans: {
         Row: {
           created_at: string

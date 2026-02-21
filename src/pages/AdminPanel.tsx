@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Package, Users, CreditCard, Settings, LogOut, Plus, X, AlertTriangle, FileText, FolderOpen,
+  LayoutDashboard, Package, Users, CreditCard, Settings, LogOut, Plus, X, AlertTriangle, FileText, FolderOpen, Building2,
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import AdminDashboardCharts from "@/components/AdminDashboardCharts";
 import AdminDocumentViewer from "@/components/AdminDocumentViewer";
+import AdminHotelManager from "@/components/AdminHotelManager";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const AdminPanel = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [installmentPlans, setInstallmentPlans] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<any[]>([]);
   const [showPackageForm, setShowPackageForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [pkgForm, setPkgForm] = useState({ name: "", type: "umrah", description: "", price: "", duration_days: "", image_url: "" });
@@ -43,16 +45,18 @@ const AdminPanel = () => {
   }, [isAdmin]);
 
   const fetchAll = async () => {
-    const [bk, py, pk, ip] = await Promise.all([
+    const [bk, py, pk, ip, ht] = await Promise.all([
       supabase.from("bookings").select("*, packages(name, type), profiles(full_name)").order("created_at", { ascending: false }),
       supabase.from("payments").select("*, bookings(tracking_id)").order("created_at", { ascending: false }),
       supabase.from("packages").select("*").order("created_at", { ascending: false }),
       supabase.from("installment_plans").select("*").order("created_at", { ascending: false }),
+      supabase.from("hotels").select("*").order("created_at", { ascending: false }),
     ]);
     setBookings(bk.data || []);
     setPayments(py.data || []);
     setPackages(pk.data || []);
     setInstallmentPlans(ip.data || []);
+    setHotels(ht.data || []);
   };
 
   const handleCreatePackage = async (e: React.FormEvent) => {
@@ -104,6 +108,7 @@ const AdminPanel = () => {
   const tabs = [
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { key: "packages", label: "Packages", icon: Package },
+    { key: "hotels", label: "Hotels", icon: Building2 },
     { key: "bookings", label: "Bookings", icon: FileText },
     { key: "payments", label: "Payments", icon: CreditCard },
     { key: "documents", label: "Documents", icon: FolderOpen },
@@ -184,6 +189,11 @@ const AdminPanel = () => {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Hotels */}
+        {activeTab === "hotels" && (
+          <AdminHotelManager hotels={hotels} onRefresh={fetchAll} />
         )}
 
         {/* Bookings */}
