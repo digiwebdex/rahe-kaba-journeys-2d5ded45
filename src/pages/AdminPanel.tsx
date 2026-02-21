@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Package, Users, CreditCard, Settings, LogOut, Plus, X, AlertTriangle, FileText, FolderOpen, Building2,
+  LayoutDashboard, Package, Users, CreditCard, Settings, LogOut, Plus, X, AlertTriangle, FileText, FolderOpen, Building2, Pencil,
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import AdminDashboardCharts from "@/components/AdminDashboardCharts";
 import AdminDocumentViewer from "@/components/AdminDocumentViewer";
 import AdminHotelManager from "@/components/AdminHotelManager";
+import AdminCmsEditor from "@/components/AdminCmsEditor";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -107,6 +108,7 @@ const AdminPanel = () => {
 
   const tabs = [
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { key: "cms", label: "CMS", icon: Pencil },
     { key: "packages", label: "Packages", icon: Package },
     { key: "hotels", label: "Hotels", icon: Building2 },
     { key: "bookings", label: "Bookings", icon: FileText },
@@ -154,6 +156,9 @@ const AdminPanel = () => {
             onMarkPaid={markPaymentCompleted}
           />
         )}
+
+        {/* CMS */}
+        {activeTab === "cms" && <AdminCmsEditor />}
 
         {/* Packages */}
         {activeTab === "packages" && (

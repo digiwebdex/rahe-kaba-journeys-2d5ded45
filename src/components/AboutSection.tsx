@@ -2,17 +2,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, Heart, Award, Clock } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
-const reasons = [
+const defaultReasons = [
   { icon: Shield, title: "Government Approved", desc: "Fully licensed and government-approved Hajj & Umrah agency" },
   { icon: Heart, title: "Personalized Care", desc: "Dedicated support from booking to return journey" },
   { icon: Award, title: "Premium Quality", desc: "Top-rated hotels, transport and services at every step" },
   { icon: Clock, title: "15+ Years", desc: "Over a decade of trusted service in sacred travel" },
 ];
 
+const reasonIcons = [Shield, Heart, Award, Clock];
+
 const AboutSection = () => {
   const navigate = useNavigate();
   const [trackingId, setTrackingId] = useState("");
+  const { data: content } = useSiteContent("about");
+
+  const sectionLabel = content?.section_label || "Why Choose Us";
+  const heading = content?.heading || "A Journey of";
+  const headingHighlight = content?.heading_highlight || "Faith & Trust";
+  const description = content?.description || "RAHE KABA Tours & Travels has been serving pilgrims from Chittagong, Bangladesh with excellence since 2010. Our commitment to quality, transparency, and spiritual guidance makes us the preferred choice for thousands of families.";
+  const reasons = content?.reasons || defaultReasons.map((r) => ({ title: r.title, desc: r.desc }));
 
   const handleTrack = () => {
     const id = trackingId.trim();
@@ -29,34 +39,33 @@ const AboutSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">Why Choose Us</span>
+            <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">{sectionLabel}</span>
             <h2 className="font-heading text-3xl md:text-4xl font-bold mt-3 mb-6">
-              A Journey of <span className="text-gradient-gold">Faith & Trust</span>
+              {heading} <span className="text-gradient-gold">{headingHighlight}</span>
             </h2>
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              RAHE KABA Tours & Travels has been serving pilgrims from Chittagong, Bangladesh with
-              excellence since 2010. Our commitment to quality, transparency, and spiritual guidance
-              makes us the preferred choice for thousands of families.
-            </p>
+            <p className="text-muted-foreground leading-relaxed mb-8">{description}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {reasons.map((r, i) => (
-                <motion.div
-                  key={r.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex gap-3"
-                >
-                  <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <r.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm mb-1">{r.title}</h4>
-                    <p className="text-xs text-muted-foreground">{r.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
+              {reasons.map((r: any, i: number) => {
+                const IconComp = reasonIcons[i % reasonIcons.length];
+                return (
+                  <motion.div
+                    key={r.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex gap-3"
+                  >
+                    <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <IconComp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm mb-1">{r.title}</h4>
+                      <p className="text-xs text-muted-foreground">{r.desc}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
 
