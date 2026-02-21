@@ -1,0 +1,154 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { Check, ArrowRight, Filter } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import heroImage from "@/assets/hero-kaaba.jpg";
+import medinaImage from "@/assets/medina-mosque.jpg";
+
+const fallbackImages = [heroImage, medinaImage];
+
+const Packages = () => {
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      const { data } = await supabase
+        .from("packages")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      setPackages(data || []);
+      setLoading(false);
+    };
+    fetchPackages();
+  }, []);
+
+  const types = [...new Set(packages.map((p) => p.type))];
+  const filtered = typeFilter === "all" ? packages : packages.filter((p) => p.type === typeFilter);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      {/* Hero */}
+      <div className="relative pt-20 pb-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={heroImage} alt="Packages" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background" />
+        </div>
+        <div className="relative container mx-auto px-4 pt-16 pb-8 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">Our Packages</span>
+            <h1 className="font-heading text-3xl md:text-5xl font-bold mt-3 mb-4">
+              Choose Your <span className="text-gradient-gold">Sacred Journey</span>
+            </h1>
+            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+              Premium Hajj, Umrah & travel packages with flexible installment options
+            </p>
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-2 bg-gradient-gold text-primary-foreground font-semibold px-8 py-3.5 rounded-lg text-sm hover:opacity-90 transition-opacity shadow-gold"
+            >
+              Book Now <ArrowRight className="h-4 w-4" />
+            </Link>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* Type Filter */}
+        {types.length > 1 && (
+          <div className="flex gap-2 justify-center mb-10 flex-wrap">
+            <button
+              onClick={() => setTypeFilter("all")}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+                typeFilter === "all" ? "bg-gradient-gold text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Filter className="h-3.5 w-3.5" /> All Packages
+            </button>
+            {types.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={`px-5 py-2 rounded-full text-sm font-medium capitalize transition-colors ${
+                  typeFilter === t ? "bg-gradient-gold text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-20 text-muted-foreground">Loading packages...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">No packages available. Check back soon!</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {filtered.map((pkg, i) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="relative rounded-xl overflow-hidden border border-border bg-card flex flex-col hover:border-primary/40 hover:shadow-gold transition-all group"
+              >
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={pkg.image_url || fallbackImages[i % fallbackImages.length]}
+                    alt={pkg.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-card/80" />
+                </div>
+                <div className="absolute top-4 left-4 z-10">
+                  <span className="bg-primary/90 text-primary-foreground text-xs font-bold px-3 py-1 rounded-full capitalize">
+                    {pkg.type}
+                  </span>
+                </div>
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="font-heading text-xl font-bold">{pkg.name}</h3>
+                  {pkg.duration_days && (
+                    <p className="text-sm text-muted-foreground mb-2">{pkg.duration_days} Days</p>
+                  )}
+                  {pkg.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{pkg.description}</p>
+                  )}
+                  <p className="text-2xl font-heading font-bold text-primary mb-4 mt-auto">
+                    ৳{Number(pkg.price).toLocaleString()}
+                    <span className="text-sm font-body text-muted-foreground font-normal"> / person</span>
+                  </p>
+                  {pkg.features && Array.isArray(pkg.features) && pkg.features.length > 0 && (
+                    <ul className="space-y-1.5 mb-5">
+                      {(pkg.features as string[]).slice(0, 5).map((f: string) => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-foreground/80">
+                          <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Link
+                    to={`/packages/${pkg.id}`}
+                    className="w-full py-3 rounded-md text-sm font-semibold text-center inline-flex items-center justify-center gap-2 bg-gradient-gold text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    View Details <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default Packages;

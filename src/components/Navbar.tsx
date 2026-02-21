@@ -6,12 +6,12 @@ import logo from "@/assets/logo.jpg";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "Services", href: "#services" },
-  { label: "Packages", href: "#packages" },
+  { label: "Home", href: "/" },
+  { label: "Packages", href: "/packages" },
   { label: "Hotels", href: "/hotels" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Track", href: "/track" },
 ];
 
 const Navbar = () => {
@@ -33,7 +33,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
-        <a href="#home" className="flex items-center gap-3">
+        <a href="/" className="flex items-center gap-3">
           <img src={logo} alt="RAHE KABA Logo" className="h-14 w-14 rounded-md object-cover" />
           <div className="hidden sm:block">
             <span className="font-heading text-xl font-bold text-primary">RAHE KABA</span>
@@ -70,7 +70,7 @@ const Navbar = () => {
             </a>
           )}
           <a
-            href="#packages"
+            href="/packages"
             className="bg-gradient-gold text-primary-foreground font-semibold px-6 py-2.5 rounded-md text-sm hover:opacity-90 transition-opacity"
           >
             {ctaText}
@@ -98,7 +98,7 @@ const Navbar = () => {
                 </a>
               ))}
               <a
-                href="#packages"
+                href="/packages"
                 onClick={() => setOpen(false)}
                 className="bg-gradient-gold text-primary-foreground font-semibold px-6 py-3 rounded-md text-sm text-center"
               >
