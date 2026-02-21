@@ -36,7 +36,7 @@ interface Payment {
   booking_id: string;
 }
 
-type TabKey = "bookings" | "payments" | "due" | "profile";
+type TabKey = "overview" | "bookings" | "payments" | "due" | "profile";
 
 const Dashboard = () => {
   useSessionTimeout();
@@ -45,7 +45,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [activeTab, setActiveTab] = useState<TabKey>("bookings");
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [loading, setLoading] = useState(true);
   const [bookingDocs, setBookingDocs] = useState<Record<string, any[]>>({});
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
@@ -187,6 +187,7 @@ const Dashboard = () => {
   const inputClass = "w-full bg-secondary border border-border rounded-md px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   const tabs: { key: TabKey; label: string; icon: any }[] = [
+    { key: "overview", label: "Overview", icon: FileText },
     { key: "bookings", label: "My Bookings", icon: Package },
     { key: "payments", label: "Payments", icon: CreditCard },
     { key: "due", label: "Due Alerts", icon: AlertTriangle },
@@ -277,6 +278,141 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
+
+        {/* ──── Overview Tab ──── */}
+        {activeTab === "overview" && (
+          <div className="space-y-6">
+            {/* Recent Bookings with inline payments */}
+            {bookings.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="mb-4">No bookings yet.</p>
+                <Link to="/packages" className="text-primary hover:underline">Browse Packages →</Link>
+              </div>
+            ) : (
+              bookings.map((b) => {
+                const bPayments = getBookingPayments(b.id);
+                const paidCount = bPayments.filter((p) => p.status === "completed").length;
+                const overdueCount = bPayments.filter((p) => p.status === "pending" && p.due_date && new Date(p.due_date) < new Date()).length;
+                return (
+                  <motion.div
+                    key={b.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-card border border-border rounded-xl overflow-hidden"
+                  >
+                    {/* Booking header */}
+                    <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Package className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <Link to={`/track?id=${b.tracking_id}`} className="font-mono font-bold text-primary hover:underline text-sm">
+                            {b.tracking_id}
+                          </Link>
+                          <p className="text-sm text-muted-foreground">{b.packages?.name || "N/A"} • {b.num_travelers} traveler{b.num_travelers > 1 ? "s" : ""}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {overdueCount > 0 && (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">
+                            {overdueCount} overdue
+                          </span>
+                        )}
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${statusColor(b.status)}`}>
+                          {statusLabels[b.status] || b.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Financial bar */}
+                    <div className="px-5 pb-3">
+                      <div className="flex gap-6 text-sm mb-2">
+                        <span className="text-muted-foreground">Total: <strong className="text-foreground">৳{Number(b.total_amount).toLocaleString()}</strong></span>
+                        <span className="text-muted-foreground">Paid: <strong className="text-emerald">৳{Number(b.paid_amount).toLocaleString()}</strong></span>
+                        <span className="text-muted-foreground">Due: <strong className="text-destructive">৳{Number(b.due_amount || 0).toLocaleString()}</strong></span>
+                      </div>
+                      {Number(b.total_amount) > 0 && (
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, (Number(b.paid_amount) / Number(b.total_amount)) * 100)}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Payment history inline */}
+                    {bPayments.length > 0 && (
+                      <div className="border-t border-border">
+                        <div className="px-5 py-3 bg-muted/30">
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">
+                            Payment History ({paidCount}/{bPayments.length} completed)
+                          </p>
+                          <div className="space-y-1.5">
+                            {bPayments.map((p) => {
+                              const isOverdue = p.status === "pending" && p.due_date && new Date(p.due_date) < new Date();
+                              return (
+                                <div key={p.id} className={`flex items-center justify-between text-sm py-1.5 px-3 rounded-md ${isOverdue ? "bg-destructive/5" : ""}`}>
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-muted-foreground w-6">#{p.installment_number || "—"}</span>
+                                    <span className="font-medium">৳{Number(p.amount).toLocaleString()}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {p.due_date ? `Due: ${new Date(p.due_date).toLocaleDateString()}` : ""}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${statusColor(isOverdue ? "failed" : p.status)}`}>
+                                      {isOverdue ? "overdue" : p.status}
+                                    </span>
+                                    {p.status === "completed" && (
+                                      <button
+                                        onClick={() => handleDownloadReceipt(p, b)}
+                                        disabled={generatingPdf === p.id}
+                                        className="text-xs text-primary hover:underline"
+                                      >
+                                        <Download className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="px-5 py-3 border-t border-border flex items-center gap-4">
+                      <button
+                        onClick={() => handleDownloadInvoice(b)}
+                        disabled={generatingPdf === b.id}
+                        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline disabled:opacity-50"
+                      >
+                        <Download className="h-4 w-4" />
+                        {generatingPdf === b.id ? "Generating..." : "Invoice"}
+                      </button>
+                      <button
+                        onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
+                        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Docs ({(bookingDocs[b.id] || []).length}/3)
+                      </button>
+                    </div>
+                    {expandedBooking === b.id && (
+                      <div className="px-5 pb-5 border-t border-border pt-3">
+                        <DocumentUpload bookingId={b.id} userId={user.id} documents={bookingDocs[b.id] || []} onUploaded={fetchData} />
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+        )}
 
         {/* ──── Bookings Tab ──── */}
         {activeTab === "bookings" && (
