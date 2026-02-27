@@ -5,36 +5,38 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Contact = () => {
   const { data: content } = useSiteContent("contact");
+  const { t, language } = useLanguage();
+  const bn = language === "bn";
   const [form, setForm] = useState({ name: "", phone: "", email: "", service: "", message: "" });
   const [loading, setLoading] = useState(false);
 
   const phone = content?.phone || "+880 1601-505050";
   const email = content?.email || "rahekaba.info@gmail.com";
-  const location = content?.location || "Chittagong, Bangladesh";
-  const hours = content?.hours || "Sat - Thu: 9AM - 9PM";
+  const location = content?.location || (bn ? "চট্টগ্রাম, বাংলাদেশ" : "Chittagong, Bangladesh");
+  const hours = content?.hours || (bn ? "শনি - বৃহঃ: সকাল ৯টা - রাত ৯টা" : "Sat - Thu: 9AM - 9PM");
 
   const contactItems = [
-    { icon: Phone, label: "Phone", value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
-    { icon: Mail, label: "Email", value: email, href: `mailto:${email}` },
-    { icon: MapPin, label: "Location", value: location, href: "#" },
-    { icon: Clock, label: "Hours", value: hours, href: "#" },
+    { icon: Phone, label: t("contact.phone"), value: phone, href: `tel:${phone.replace(/[\s-]/g, "")}` },
+    { icon: Mail, label: t("contact.email"), value: email, href: `mailto:${email}` },
+    { icon: MapPin, label: t("contact.location"), value: location, href: "#" },
+    { icon: Clock, label: t("contact.hours"), value: hours, href: "#" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim()) {
-      toast.error("Please fill in required fields");
+      toast.error(bn ? "প্রয়োজনীয় তথ্য পূরণ করুন" : "Please fill in required fields");
       return;
     }
     setLoading(true);
-    // Build WhatsApp message
     const msg = `Hello RAHE KABA!%0A%0AName: ${encodeURIComponent(form.name)}%0APhone: ${encodeURIComponent(form.phone)}%0AEmail: ${encodeURIComponent(form.email)}%0AService: ${encodeURIComponent(form.service)}%0AMessage: ${encodeURIComponent(form.message)}`;
     const waUrl = `https://wa.me/8801601505050?text=${msg}`;
     window.open(waUrl, "_blank");
-    toast.success("Redirecting to WhatsApp...");
+    toast.success(bn ? "হোয়াটসঅ্যাপে রিডাইরেক্ট হচ্ছে..." : "Redirecting to WhatsApp...");
     setLoading(false);
   };
 
@@ -46,12 +48,14 @@ const Contact = () => {
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-            <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">Get In Touch</span>
+            <span className="text-primary text-sm font-medium tracking-[0.3em] uppercase">
+              {t("contact.label")}
+            </span>
             <h1 className="font-heading text-3xl md:text-5xl font-bold mt-3 mb-4">
-              Contact <span className="text-gradient-gold">Us</span>
+              {t("contact.heading")} <span className="text-gradient-gold">{t("contact.headingHighlight")}</span>
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Have questions? We'd love to hear from you. Reach out to us anytime.
+              {bn ? "কোনো প্রশ্ন আছে? আমরা আপনার কথা শুনতে চাই। যেকোনো সময় যোগাযোগ করুন।" : "Have questions? We'd love to hear from you. Reach out to us anytime."}
             </p>
           </motion.div>
 
@@ -81,7 +85,7 @@ const Contact = () => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold py-3.5 rounded-xl text-sm hover:bg-emerald-700 transition-colors w-full mt-4"
               >
-                <Phone className="h-4 w-4" /> Chat on WhatsApp
+                <Phone className="h-4 w-4" /> {bn ? "হোয়াটসঅ্যাপে চ্যাট করুন" : "Chat on WhatsApp"}
               </a>
             </motion.div>
 
@@ -95,7 +99,7 @@ const Contact = () => {
               <div className="grid grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Your Name *"
+                  placeholder={`${t("contact.yourName")} *`}
                   required
                   maxLength={100}
                   value={form.name}
@@ -104,7 +108,7 @@ const Contact = () => {
                 />
                 <input
                   type="tel"
-                  placeholder="Phone Number *"
+                  placeholder={`${t("contact.phoneNumber")} *`}
                   required
                   maxLength={15}
                   value={form.phone}
@@ -114,7 +118,7 @@ const Contact = () => {
               </div>
               <input
                 type="email"
-                placeholder="Email Address"
+                placeholder={t("contact.emailAddress")}
                 maxLength={255}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -125,17 +129,17 @@ const Contact = () => {
                 onChange={(e) => setForm({ ...form, service: e.target.value })}
                 className={inputClass}
               >
-                <option value="">Select Service</option>
-                <option>Hajj Package</option>
-                <option>Umrah Package</option>
-                <option>Visa Processing</option>
-                <option>Air Ticket</option>
-                <option>Hotel Booking</option>
-                <option>Other</option>
+                <option value="">{t("contact.selectService")}</option>
+                <option>{t("contact.hajjPackage")}</option>
+                <option>{t("contact.umrahPackage")}</option>
+                <option>{t("contact.visaProcessing")}</option>
+                <option>{t("contact.airTicketService")}</option>
+                <option>{t("contact.hotelBooking")}</option>
+                <option>{t("contact.other")}</option>
               </select>
               <textarea
                 rows={4}
-                placeholder="Your Message"
+                placeholder={t("contact.yourMessage")}
                 maxLength={1000}
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -146,7 +150,7 @@ const Contact = () => {
                 disabled={loading}
                 className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3 rounded-md text-sm hover:opacity-90 transition-opacity shadow-gold flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Send className="h-4 w-4" /> Send Message
+                <Send className="h-4 w-4" /> {t("contact.sendMessage")}
               </button>
             </motion.form>
           </div>
