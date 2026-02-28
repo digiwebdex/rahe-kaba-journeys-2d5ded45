@@ -81,9 +81,15 @@ const PackagesSection = () => {
                     </li>
                   ))}
                 </ul>
-                <a href="#contact" className={`w-full py-3 rounded-md text-sm font-semibold text-center inline-flex items-center justify-center gap-2 transition-all ${pkg.popular ? "bg-gradient-gold text-primary-foreground hover:opacity-90" : "border border-primary/40 text-foreground hover:bg-primary/10"}`}>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("contact");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className={`w-full py-3 rounded-md text-sm font-semibold text-center inline-flex items-center justify-center gap-2 transition-all cursor-pointer ${pkg.popular ? "bg-gradient-gold text-primary-foreground hover:opacity-90" : "border border-primary/40 text-foreground hover:bg-primary/10"}`}
+                >
                   {t("packages.bookNow")} <ArrowRight className="h-4 w-4" />
-                </a>
+                </button>
               </div>
             </motion.div>
           ))}
