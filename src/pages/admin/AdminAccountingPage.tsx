@@ -102,7 +102,11 @@ export default function AdminAccountingPage() {
       wallet_account_id: form.wallet_account_id || null,
     };
     const { error } = await supabase.from("expenses").insert(payload);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      if (error.message?.includes("Insufficient wallet balance")) toast.error("Insufficient wallet balance for this expense");
+      else toast.error(error.message);
+      return;
+    }
     toast.success("Expense recorded");
     setShowForm(false); setForm({ ...EMPTY_FORM });
     fetchData(); fetchProfitViews();
