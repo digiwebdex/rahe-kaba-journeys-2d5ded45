@@ -35,20 +35,50 @@ export default function AdminDueAlertsPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingId, setSendingId] = useState<string | null>(null);
-
+  const [bookingDues, setBookingDues] = useState<any[]>([]);
   const fetchData = async () => {
     setLoading(true);
-    const [paymentsRes, profilesRes] = await Promise.all([
+    const [paymentsRes, profilesRes, bookingsRes] = await Promise.all([
       supabase
         .from("payments")
-        .select("*, bookings(tracking_id, user_id, packages(name))")
+        .select("*, bookings(tracking_id, user_id, guest_name, guest_phone, packages(name))")
         .eq("status", "pending")
         .not("due_date", "is", null)
         .order("due_date", { ascending: true }),
       supabase.from("profiles").select("user_id, full_name, phone"),
+      // Also fetch bookings with outstanding dues but no pending payment records
+      supabase
+        .from("bookings")
+        .select("id, tracking_id, user_id, guest_name, guest_phone, total_amount, paid_amount, due_amount, status, packages(name)")
+        .gt("due_amount", 0)
+        .in("status", ["pending", "confirmed", "visa_processing", "ticket_issued"])
+        .order("created_at", { ascending: false }),
     ]);
     setPayments((paymentsRes.data as any[]) || []);
     setProfiles((profilesRes.data as any[]) || []);
+    
+    // Find bookings that have dues but NO pending payment records
+    const paymentBookingIds = new Set((paymentsRes.data || []).map((p: any) => p.booking_id));
+    const bookingsWithoutPayments = (bookingsRes.data || [])
+      .filter((b: any) => !paymentBookingIds.has(b.id))
+      .map((b: any) => ({
+        id: `booking-${b.id}`,
+        amount: Number(b.due_amount || 0),
+        due_date: null,
+        installment_number: null,
+        status: "pending",
+        booking_id: b.id,
+        user_id: b.user_id || "",
+        isBookingDue: true,
+        bookings: {
+          tracking_id: b.tracking_id,
+          user_id: b.user_id,
+          guest_name: b.guest_name,
+          guest_phone: b.guest_phone,
+          packages: b.packages,
+        },
+      }));
+    setBookingDues(bookingsWithoutPayments);
     setLoading(false);
   };
 
@@ -64,22 +94,38 @@ export default function AdminDueAlertsPage() {
   today.setHours(0, 0, 0, 0);
 
   const overdue = useMemo(
-    () => payments.filter((p) => new Date(p.due_date) < today).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()),
+    () => [
+      ...payments.filter((p) => new Date(p.due_date) < today),
+    ].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()),
     [payments]
   );
 
   const upcoming = useMemo(
-    () => payments.filter((p) => {
-      const d = new Date(p.due_date);
-      return d >= today && differenceInDays(d, today) <= 30;
-    }).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()),
+    () => [
+      ...payments.filter((p) => {
+        const d = new Date(p.due_date);
+        return d >= today && differenceInDays(d, today) <= 30;
+      }),
+    ].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()),
     [payments]
   );
 
+  // Bookings with dues but no scheduled payments - show separately
+  const allDueItems = useMemo(() => [...overdue, ...upcoming, ...bookingDues], [overdue, upcoming, bookingDues]);
+
   const overdueTotal = overdue.reduce((s, p) => s + Number(p.amount), 0);
   const upcomingTotal = upcoming.reduce((s, p) => s + Number(p.amount), 0);
+  const bookingDueTotal = bookingDues.reduce((s, p) => s + Number(p.amount), 0);
 
-  const getProfile = (p: PaymentRow) => profileMap[p.bookings?.user_id || p.user_id];
+  const getProfile = (p: any) => profileMap[p.bookings?.user_id || p.user_id];
+  const getName = (p: any) => {
+    const profile = getProfile(p);
+    return profile?.full_name || p.bookings?.guest_name || "—";
+  };
+  const getPhone = (p: any) => {
+    const profile = getProfile(p);
+    return profile?.phone || p.bookings?.guest_phone || "—";
+  };
 
   const markPaid = async (id: string) => {
     const { error } = await supabase.from("payments").update({ status: "completed", paid_at: new Date().toISOString() }).eq("id", id);
@@ -154,38 +200,48 @@ export default function AdminDueAlertsPage() {
     }
   };
 
-  const renderRow = (p: PaymentRow, type: "overdue" | "upcoming") => {
-    const profile = getProfile(p);
-    const dueDate = new Date(p.due_date);
-    const days = Math.abs(differenceInDays(dueDate, today));
+  const renderRow = (p: any, type: "overdue" | "upcoming" | "booking_due") => {
+    const dueDate = p.due_date ? new Date(p.due_date) : null;
+    const days = dueDate ? Math.abs(differenceInDays(dueDate, today)) : null;
 
     return (
       <TableRow key={p.id}>
         <TableCell className="font-mono text-xs">{p.bookings?.tracking_id || "—"}</TableCell>
-        <TableCell>{profile?.full_name || "—"}</TableCell>
-        <TableCell className="text-xs">{profile?.phone || "—"}</TableCell>
+        <TableCell>{getName(p)}</TableCell>
+        <TableCell className="text-xs">{getPhone(p)}</TableCell>
         <TableCell className="text-center">{p.installment_number || "—"}</TableCell>
         <TableCell className="font-medium">৳{Number(p.amount).toLocaleString()}</TableCell>
-        <TableCell>{format(dueDate, "dd MMM yyyy")}</TableCell>
+        <TableCell>{dueDate ? format(dueDate, "dd MMM yyyy") : "No date set"}</TableCell>
         <TableCell>
-          <Badge variant={type === "overdue" ? "destructive" : "secondary"}>
-            {days} {type === "overdue" ? "days overdue" : "days left"}
-          </Badge>
+          {type === "booking_due" ? (
+            <Badge variant="secondary">Outstanding</Badge>
+          ) : (
+            <Badge variant={type === "overdue" ? "destructive" : "secondary"}>
+              {days} {type === "overdue" ? "days overdue" : "days left"}
+            </Badge>
+          )}
         </TableCell>
         <TableCell>
           <div className="flex gap-1.5">
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendSms(p)} disabled={sendingId === p.id}>
-              <Phone className="h-3 w-3" /> SMS
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendEmailReminder(p)} disabled={sendingId === p.id}>
-              <Send className="h-3 w-3" /> Email
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendWhatsApp(p)}>
-              <MessageSquare className="h-3 w-3" /> WhatsApp
-            </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => markPaid(p.id)}>
-              <CheckCircle className="h-3 w-3" /> Paid
-            </Button>
+            {!p.isBookingDue && (
+              <>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendSms(p)} disabled={sendingId === p.id}>
+                  <Phone className="h-3 w-3" /> SMS
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendEmailReminder(p)} disabled={sendingId === p.id}>
+                  <Send className="h-3 w-3" /> Email
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => sendWhatsApp(p)}>
+                  <MessageSquare className="h-3 w-3" /> WhatsApp
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => markPaid(p.id)}>
+                  <CheckCircle className="h-3 w-3" /> Paid
+                </Button>
+              </>
+            )}
+            {p.isBookingDue && (
+              <span className="text-xs text-muted-foreground">No installment schedule</span>
+            )}
           </div>
         </TableCell>
       </TableRow>
@@ -200,8 +256,11 @@ export default function AdminDueAlertsPage() {
         <AlertTriangle className="h-5 w-5 text-destructive" /> Due Alerts
       </h2>
 
-      <Tabs defaultValue="overdue">
+      <Tabs defaultValue="all_dues">
         <TabsList>
+          <TabsTrigger value="all_dues" className="gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5" /> All Dues ({bookingDues.length + overdue.length})
+          </TabsTrigger>
           <TabsTrigger value="overdue" className="gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5" /> Overdue ({overdue.length})
           </TabsTrigger>
@@ -209,6 +268,34 @@ export default function AdminDueAlertsPage() {
             <Clock className="h-3.5 w-3.5" /> Upcoming ({upcoming.length})
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="all_dues">
+          <Card className="mb-4">
+            <CardContent className="py-4 flex gap-6">
+              <div><span className="text-sm text-muted-foreground">Bookings with Dues</span><p className="text-2xl font-bold text-destructive">{bookingDues.length + overdue.length}</p></div>
+              <div><span className="text-sm text-muted-foreground">Total Outstanding</span><p className="text-2xl font-bold">৳{(bookingDueTotal + overdueTotal).toLocaleString()}</p></div>
+            </CardContent>
+          </Card>
+          {(bookingDues.length + overdue.length) === 0 ? (
+            <p className="text-center text-muted-foreground py-12">No outstanding dues 🎉</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tracking ID</TableHead><TableHead>Customer</TableHead><TableHead>Phone</TableHead>
+                    <TableHead className="text-center">#</TableHead><TableHead>Due Amount</TableHead><TableHead>Due Date</TableHead>
+                    <TableHead>Status</TableHead><TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {overdue.map((p) => renderRow(p, "overdue"))}
+                  {bookingDues.map((p) => renderRow(p, "booking_due"))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
 
         <TabsContent value="overdue">
           <Card className="mb-4">
