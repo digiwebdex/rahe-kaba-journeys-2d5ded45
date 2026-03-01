@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Save, User, Phone, Mail, MapPin, CreditCard, FileText } from "lucide-react";
+import CustomerSearchSelect from "@/components/admin/CustomerSearchSelect";
 
 const inputClass =
   "w-full bg-secondary border border-border rounded-md px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40";
@@ -13,6 +14,7 @@ export default function AdminCreateBookingPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [packages, setPackages] = useState<any[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     guest_name: "",
@@ -39,6 +41,30 @@ export default function AdminCreateBookingPage() {
       .order("name")
       .then(({ data }) => setPackages(data || []));
   }, []);
+
+  const handleCustomerSelect = (customer: any | null) => {
+    if (customer) {
+      setSelectedCustomerId(customer.user_id);
+      setForm((prev) => ({
+        ...prev,
+        guest_name: customer.full_name || "",
+        guest_phone: customer.phone || "",
+        guest_email: customer.email || "",
+        guest_address: customer.address || "",
+        guest_passport: customer.passport_number || "",
+      }));
+    } else {
+      setSelectedCustomerId(null);
+      setForm((prev) => ({
+        ...prev,
+        guest_name: "",
+        guest_phone: "",
+        guest_email: "",
+        guest_address: "",
+        guest_passport: "",
+      }));
+    }
+  };
 
   const handlePackageChange = (packageId: string) => {
     const pkg = packages.find((p) => p.id === packageId);
@@ -71,22 +97,30 @@ export default function AdminCreateBookingPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Not authenticated"); return; }
 
-      // 1. Find or create customer profile
-      let customerId: string | null = null;
+      let customerId: string | null = selectedCustomerId;
       const cleanPhone = form.guest_phone.trim().replace(/[^\d+]/g, "");
 
-      // Search existing profiles by phone
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("phone", cleanPhone)
-        .maybeSingle();
+      // If no customer selected, try to find by phone or email to prevent duplicates
+      if (!customerId) {
+        const { data: byPhone } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("phone", cleanPhone)
+          .maybeSingle();
 
-      if (existingProfile) {
-        customerId = existingProfile.user_id;
+        if (byPhone) {
+          customerId = byPhone.user_id;
+        } else if (form.guest_email.trim()) {
+          const { data: byEmail } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("email", form.guest_email.trim().toLowerCase())
+            .maybeSingle();
+          if (byEmail) customerId = byEmail.user_id;
+        }
       }
 
-      // 2. Create booking
+      // Create booking
       const { data: booking, error } = await supabase.from("bookings").insert({
         guest_name: form.guest_name.trim(),
         guest_phone: cleanPhone,
@@ -105,7 +139,7 @@ export default function AdminCreateBookingPage() {
 
       if (error) throw error;
 
-      // 3. If paid_amount > 0, create an initial payment record
+      // If paid_amount > 0, create initial payment
       if (form.paid_amount > 0 && booking) {
         await supabase.from("payments").insert({
           booking_id: booking.id,
@@ -145,6 +179,20 @@ export default function AdminCreateBookingPage() {
         <h3 className="font-heading font-semibold text-sm flex items-center gap-2">
           <User className="h-4 w-4 text-primary" /> কাস্টমার তথ্য
         </h3>
+
+        {/* Searchable Customer Selector */}
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">কাস্টমার খুঁজুন (বিদ্যমান)</label>
+          <CustomerSearchSelect onSelect={handleCustomerSelect} selectedId={selectedCustomerId} />
+        </div>
+
+        <div className="relative">
+          <div className="absolute inset-x-0 top-1/2 border-t border-border/60" />
+          <p className="relative text-center text-[10px] text-muted-foreground bg-card px-3 w-fit mx-auto">
+            {selectedCustomerId ? "নির্বাচিত কাস্টমারের তথ্য" : "অথবা নতুন কাস্টমারের তথ্য দিন"}
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs text-muted-foreground block mb-1">কাস্টমারের নাম *</label>
