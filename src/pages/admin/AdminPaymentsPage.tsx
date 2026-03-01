@@ -44,11 +44,17 @@ export default function AdminPaymentsPage() {
   const [selectedBookingInfo, setSelectedBookingInfo] = useState<any>(null);
 
   const fetchPayments = async () => {
-    const [payRes, walletRes] = await Promise.all([
-      supabase.from("payments").select("*, bookings(tracking_id, total_amount, paid_amount, due_amount, guest_name, num_travelers, status, packages(name, type, duration_days)), profiles:user_id(full_name, phone)").order("created_at", { ascending: false }),
+    const [payRes, walletRes, profileRes] = await Promise.all([
+      supabase.from("payments").select("*, bookings(tracking_id, total_amount, paid_amount, due_amount, guest_name, num_travelers, status, packages(name, type, duration_days))").order("created_at", { ascending: false }),
       supabase.from("accounts" as any).select("*").eq("type", "asset"),
+      supabase.from("profiles").select("user_id, full_name, phone"),
     ]);
-    setPayments(payRes.data || []);
+    const profileMap = new Map((profileRes.data || []).map((p: any) => [p.user_id, p]));
+    const paymentsWithProfiles = (payRes.data || []).map((p: any) => ({
+      ...p,
+      profiles: profileMap.get(p.user_id) || null,
+    }));
+    setPayments(paymentsWithProfiles);
     setWalletAccounts((walletRes.data as any[]) || []);
   };
 
