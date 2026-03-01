@@ -755,8 +755,13 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          date_of_birth: string | null
+          email: string | null
+          emergency_contact: string | null
           full_name: string | null
           id: string
+          nid_number: string | null
+          notes: string | null
           passport_number: string | null
           phone: string | null
           updated_at: string
@@ -765,8 +770,13 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: string | null
           full_name?: string | null
           id?: string
+          nid_number?: string | null
+          notes?: string | null
           passport_number?: string | null
           phone?: string | null
           updated_at?: string
@@ -775,8 +785,13 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: string | null
           full_name?: string | null
           id?: string
+          nid_number?: string | null
+          notes?: string | null
           passport_number?: string | null
           phone?: string | null
           updated_at?: string
