@@ -158,6 +158,7 @@ export default function AdminPaymentsPage() {
 
   const [markPaidId, setMarkPaidId] = useState<string | null>(null);
   const [markPaidWallet, setMarkPaidWallet] = useState("");
+  const [viewPayment, setViewPayment] = useState<any>(null);
 
   const filtered = payments.filter((p) => {
     if (!searchQuery) return true;
@@ -218,7 +219,7 @@ export default function AdminPaymentsPage() {
           </thead>
           <tbody>
             {filtered.map((p: any) => (
-              <tr key={p.id} className="border-b border-border/50">
+              <tr key={p.id} className="border-b border-border/50 cursor-pointer hover:bg-secondary/30 transition-colors" onClick={() => { if (editingId !== p.id && markPaidId !== p.id) setViewPayment(p); }}>
                 {editingId === p.id ? (
                   <>
                     <td className="py-3 pr-4 font-mono text-xs">{p.bookings?.tracking_id || "—"}</td>
@@ -254,7 +255,7 @@ export default function AdminPaymentsPage() {
                         {p.status}
                       </span>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3" onClick={(e) => e.stopPropagation()}>
                       {p.status === "pending" && markPaidId === p.id ? (
                         <div className="flex items-center gap-1.5">
                           <select className={inputClass + " w-28 !py-1 text-xs"} value={markPaidWallet} onChange={(e) => setMarkPaidWallet(e.target.value)}>
@@ -367,6 +368,53 @@ export default function AdminPaymentsPage() {
               </button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Payment Detail Modal */}
+      <Dialog open={!!viewPayment} onOpenChange={(o) => { if (!o) setViewPayment(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading">পেমেন্ট বিবরণ</DialogTitle>
+          </DialogHeader>
+          {viewPayment && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div><span className="text-muted-foreground text-xs block">বুকিং</span><span className="font-mono font-medium">{viewPayment.bookings?.tracking_id || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">কাস্টমার</span><span className="font-medium">{viewPayment.profiles?.full_name || viewPayment.bookings?.guest_name || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">পরিমাণ</span><span className="font-bold text-primary">{fmt(Number(viewPayment.amount))}</span></div>
+                <div><span className="text-muted-foreground text-xs block">পদ্ধতি</span><span className="font-medium capitalize">{viewPayment.payment_method || "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">কিস্তি নং</span><span className="font-medium">{viewPayment.installment_number || "—"}</span></div>
+                <div>
+                  <span className="text-muted-foreground text-xs block">স্ট্যাটাস</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${viewPayment.status === "completed" ? "text-emerald bg-emerald/10" : viewPayment.status === "pending" ? "text-primary bg-primary/10" : "text-destructive bg-destructive/10"}`}>
+                    {viewPayment.status}
+                  </span>
+                </div>
+                <div><span className="text-muted-foreground text-xs block">Due Date</span><span className="font-medium">{viewPayment.due_date ? new Date(viewPayment.due_date).toLocaleDateString() : "—"}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Paid Date</span><span className="font-medium">{viewPayment.paid_at ? new Date(viewPayment.paid_at).toLocaleDateString() : "—"}</span></div>
+                {viewPayment.transaction_id && (
+                  <div className="col-span-2"><span className="text-muted-foreground text-xs block">Transaction ID</span><span className="font-mono font-medium">{viewPayment.transaction_id}</span></div>
+                )}
+              </div>
+              {viewPayment.bookings && (
+                <div className="border-t border-border/50 pt-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">বুকিং তথ্য</h4>
+                  <div className="grid grid-cols-3 gap-3 bg-secondary/50 rounded-lg p-3">
+                    <div><span className="text-muted-foreground text-xs block">মোট</span><span className="font-bold">{fmt(Number(viewPayment.bookings.total_amount))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">পরিশোধিত</span><span className="font-bold text-emerald-500">{fmt(Number(viewPayment.bookings.paid_amount))}</span></div>
+                    <div><span className="text-muted-foreground text-xs block">বকেয়া</span><span className="font-bold text-destructive">{fmt(Number(viewPayment.bookings.due_amount || 0))}</span></div>
+                  </div>
+                  {viewPayment.bookings.packages && (
+                    <p className="text-xs text-muted-foreground mt-2">প্যাকেজ: <span className="text-foreground font-medium">{viewPayment.bookings.packages.name}</span> ({viewPayment.bookings.packages.type})</p>
+                  )}
+                </div>
+              )}
+              {viewPayment.notes && (
+                <div><span className="text-muted-foreground text-xs block">নোট</span><p>{viewPayment.notes}</p></div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
