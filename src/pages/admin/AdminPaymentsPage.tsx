@@ -71,12 +71,41 @@ export default function AdminPaymentsPage() {
     setAddForm((prev) => ({ ...prev, customer_id: customerId, booking_id: "" }));
     setSelectedBookingInfo(null);
     if (!customerId) { setCustomerBookings([]); return; }
-    const { data } = await supabase.from("bookings")
+    
+    // Fetch bookings by user_id
+    const { data: byUserId } = await supabase.from("bookings")
       .select("id, tracking_id, total_amount, paid_amount, due_amount, packages(name)")
       .eq("user_id", customerId)
-      .in("status", ["pending", "confirmed", "visa_processing", "ticket_issued"])
       .order("created_at", { ascending: false });
-    setCustomerBookings(data || []);
+    
+    // Also fetch customer profile to find bookings by phone/email
+    const { data: profile } = await supabase.from("profiles")
+      .select("phone, email")
+      .eq("user_id", customerId)
+      .maybeSingle();
+    
+    let allBookings = [...(byUserId || [])];
+    const existingIds = new Set(allBookings.map(b => b.id));
+    
+    // Search by guest_phone if profile has phone
+    if (profile?.phone) {
+      const { data: byPhone } = await supabase.from("bookings")
+        .select("id, tracking_id, total_amount, paid_amount, due_amount, packages(name)")
+        .eq("guest_phone", profile.phone)
+        .order("created_at", { ascending: false });
+      (byPhone || []).forEach(b => { if (!existingIds.has(b.id)) { allBookings.push(b); existingIds.add(b.id); } });
+    }
+    
+    // Search by guest_email if profile has email
+    if (profile?.email) {
+      const { data: byEmail } = await supabase.from("bookings")
+        .select("id, tracking_id, total_amount, paid_amount, due_amount, packages(name)")
+        .eq("guest_email", profile.email)
+        .order("created_at", { ascending: false });
+      (byEmail || []).forEach(b => { if (!existingIds.has(b.id)) { allBookings.push(b); existingIds.add(b.id); } });
+    }
+    
+    setCustomerBookings(allBookings);
   };
 
   const handleBookingChange = (bookingId: string) => {
