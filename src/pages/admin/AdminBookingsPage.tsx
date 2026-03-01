@@ -261,7 +261,7 @@ export default function AdminBookingsPage() {
       </div>
 
       {filtered.map((b: any) => (
-        <div key={b.id} className="bg-card border border-border rounded-lg p-4">
+        <div key={b.id} className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-primary/30 transition-colors" onClick={() => { if (editingId !== b.id) setViewBooking(b); }}>
           {editingId === b.id ? (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -326,7 +326,7 @@ export default function AdminBookingsPage() {
                 <div><p className="text-muted-foreground text-xs">Paid</p><p className="font-medium text-emerald-500">{fmt(Number(b.paid_amount))}</p></div>
                 <div><p className="text-muted-foreground text-xs">Due</p><p className="font-medium text-destructive">{fmt(Number(b.due_amount || 0))}</p></div>
               </div>
-              <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setExpandedId(expandedId === b.id ? null : b.id)}
                   className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
