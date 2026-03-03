@@ -159,10 +159,10 @@ export default function AdminPaymentsPage() {
   };
 
   const handleAddPayment = async () => {
-    if (!addForm.amount || parseFloat(addForm.amount) <= 0) { toast.error("সঠিক পরিমাণ দিন"); return; }
+    if (!addForm.amount || parseFloat(addForm.amount) <= 0) { toast.error("Enter a valid amount"); return; }
     
     if (paymentType === "customer") {
-      if (!addForm.booking_id) { toast.error("বুকিং নির্বাচন করুন"); return; }
+      if (!addForm.booking_id) { toast.error("Please select a booking"); return; }
       setAddLoading(true);
       try {
         const booking = allBookings.find(b => b.id === addForm.booking_id);
@@ -179,13 +179,13 @@ export default function AdminPaymentsPage() {
           notes: addForm.notes.trim() || null, wallet_account_id: addForm.wallet_account_id || null,
         } as any);
         if (error) throw error;
-        toast.success("পেমেন্ট সফলভাবে যোগ হয়েছে");
+        toast.success("Payment added successfully");
         setShowAddModal(false);
         resetAddForm();
         fetchPayments();
       } catch (err: any) { toast.error(err.message); } finally { setAddLoading(false); }
     } else if (paymentType === "moallem") {
-      if (!addForm.moallem_id) { toast.error("মোয়াল্লেম নির্বাচন করুন"); return; }
+      if (!addForm.moallem_id) { toast.error("Please select a moallem"); return; }
       setAddLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -200,13 +200,13 @@ export default function AdminPaymentsPage() {
           recorded_by: session?.user?.id || null,
         });
         if (error) throw error;
-        toast.success("মোয়াল্লেম পেমেন্ট সফলভাবে যোগ হয়েছে");
+        toast.success("Moallem payment added successfully");
         setShowAddModal(false);
         resetAddForm();
         fetchPayments();
       } catch (err: any) { toast.error(err.message); } finally { setAddLoading(false); }
     } else {
-      if (!addForm.supplier_id) { toast.error("সাপ্লায়ার নির্বাচন করুন"); return; }
+      if (!addForm.supplier_id) { toast.error("Please select a supplier"); return; }
       setAddLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -221,7 +221,7 @@ export default function AdminPaymentsPage() {
           recorded_by: session?.user?.id || null,
         });
         if (error) throw error;
-        toast.success("সাপ্লায়ার পেমেন্ট সফলভাবে যোগ হয়েছে");
+        toast.success("Supplier payment added successfully");
         setShowAddModal(false);
         resetAddForm();
         fetchPayments();
@@ -234,7 +234,7 @@ export default function AdminPaymentsPage() {
     if (walletId) update.wallet_account_id = walletId;
     const { error } = await supabase.from("payments").update(update).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("পেমেন্ট সম্পন্ন হয়েছে"); fetchPayments();
+    toast.success("Payment completed"); fetchPayments();
   };
 
   const startEdit = (p: any) => {
@@ -251,7 +251,7 @@ export default function AdminPaymentsPage() {
       ...(editForm.status === "completed" && !payments.find(p => p.id === editingId)?.paid_at ? { paid_at: new Date().toISOString() } : {}),
     }).eq("id", editingId);
     if (error) { toast.error(error.message); return; }
-    toast.success("পেমেন্ট আপডেট হয়েছে"); setEditingId(null); fetchPayments();
+    toast.success("Payment updated"); setEditingId(null); fetchPayments();
   };
 
   const confirmDelete = async () => {
@@ -266,7 +266,7 @@ export default function AdminPaymentsPage() {
       const { error } = await supabase.from("payments").delete().eq("id", deleteId);
       if (error) { toast.error(error.message); return; }
     }
-    toast.success("পেমেন্ট মুছে ফেলা হয়েছে"); setDeleteId(null); fetchPayments();
+    toast.success("Payment deleted"); setDeleteId(null); fetchPayments();
   };
 
   const handleReceipt = async (p: any) => {
@@ -277,8 +277,8 @@ export default function AdminPaymentsPage() {
       const company = await getCompanyInfoForPdf();
       const booking = p.bookings || {};
       await generateReceipt(p as InvoicePayment, { ...booking, packages: booking.packages }, profile || {}, company, (allPayments || []) as InvoicePayment[]);
-      toast.success("রসিদ ডাউনলোড হয়েছে");
-    } catch { toast.error("রসিদ তৈরি ব্যর্থ"); }
+      toast.success("Receipt downloaded");
+    } catch { toast.error("Failed to generate receipt"); }
     setGeneratingId(null);
   };
 
@@ -327,9 +327,9 @@ export default function AdminPaymentsPage() {
   }, [payments, moallemPayments, supplierPayments, searchQuery, viewTab]);
 
   const getTypeBadge = (type: PaymentType) => {
-    if (type === "moallem") return { label: "মোয়াল্লেম", cls: "bg-accent/20 text-accent-foreground" };
-    if (type === "supplier") return { label: "সাপ্লায়ার", cls: "bg-destructive/10 text-destructive" };
-    return { label: "কাস্টমার", cls: "bg-primary/10 text-primary" };
+    if (type === "moallem") return { label: "Moallem", cls: "bg-accent/20 text-accent-foreground" };
+    if (type === "supplier") return { label: "Supplier", cls: "bg-destructive/10 text-destructive" };
+    return { label: "Customer", cls: "bg-primary/10 text-primary" };
   };
 
   const totalAll = payments.length + moallemPayments.length + supplierPayments.length;
@@ -351,17 +351,17 @@ export default function AdminPaymentsPage() {
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <h2 className="font-heading text-xl font-bold">পেমেন্ট ব্যবস্থাপনা</h2>
+        <h2 className="font-heading text-xl font-bold">Payment Management</h2>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {canModify && (
             <button onClick={openAddModal}
               className="inline-flex items-center gap-1.5 text-sm bg-gradient-gold text-primary-foreground font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity shadow-gold whitespace-nowrap">
-              <Plus className="h-4 w-4" /> নতুন পেমেন্ট
+              <Plus className="h-4 w-4" /> New Payment
             </button>
           )}
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input className={inputClass + " pl-9"} placeholder="ট্র্যাকিং ID, নাম দিয়ে খুঁজুন..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <input className={inputClass + " pl-9"} placeholder="Search by tracking ID, name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
       </div>
@@ -369,10 +369,10 @@ export default function AdminPaymentsPage() {
       {/* View tabs */}
       <div className="flex gap-1 mb-4 border-b border-border overflow-x-auto">
         {[
-          { key: "all" as const, label: `সব (${totalAll})` },
-          { key: "customer" as const, label: `কাস্টমার (${payments.length})` },
-          { key: "moallem" as const, label: `মোয়াল্লেম (${moallemPayments.length})` },
-          { key: "supplier" as const, label: `সাপ্লায়ার (${supplierPayments.length})` },
+          { key: "all" as const, label: `All (${totalAll})` },
+          { key: "customer" as const, label: `Customer (${payments.length})` },
+          { key: "moallem" as const, label: `Moallem (${moallemPayments.length})` },
+          { key: "supplier" as const, label: `Supplier (${supplierPayments.length})` },
         ].map(t => (
           <button key={t.key} onClick={() => setViewTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${viewTab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
@@ -385,14 +385,14 @@ export default function AdminPaymentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
-              <th className="pb-3 pr-4">ধরন</th>
-              <th className="pb-3 pr-4">বুকিং</th>
-              <th className="pb-3 pr-4">নাম</th>
-              <th className="pb-3 pr-4">পরিমাণ</th>
-              <th className="pb-3 pr-4">পদ্ধতি</th>
-              <th className="pb-3 pr-4">তারিখ</th>
-              <th className="pb-3 pr-4">স্ট্যাটাস</th>
-              <th className="pb-3">অ্যাকশন</th>
+              <th className="pb-3 pr-4">Type</th>
+              <th className="pb-3 pr-4">Booking</th>
+              <th className="pb-3 pr-4">Name</th>
+              <th className="pb-3 pr-4">Amount</th>
+              <th className="pb-3 pr-4">Method</th>
+              <th className="pb-3 pr-4">Date</th>
+              <th className="pb-3 pr-4">Status</th>
+              <th className="pb-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -478,7 +478,7 @@ export default function AdminPaymentsPage() {
                             { label: "Reject", icon: <XCircle className="h-3.5 w-3.5" />, onClick: async () => {
                               const { error } = await supabase.from("payments").update({ status: "failed" }).eq("id", p.id);
                               if (error) toast.error(error.message);
-                              else { toast.success("পেমেন্ট প্রত্যাখ্যাত"); fetchPayments(); }
+                              else { toast.success("Payment rejected"); fetchPayments(); }
                             }, variant: "destructive", hidden: !canModify || p.status !== "pending" },
                             { label: "Receipt", icon: <Download className="h-3.5 w-3.5" />, onClick: () => handleReceipt(p), disabled: generatingId === p.id, hidden: p.status !== "completed", separator: true },
                           ]}
@@ -493,23 +493,23 @@ export default function AdminPaymentsPage() {
           </tbody>
         </table>
       </div>
-      {allCombined.length === 0 && <p className="text-center text-muted-foreground py-12">কোনো পেমেন্ট নেই।</p>}
+      {allCombined.length === 0 && <p className="text-center text-muted-foreground py-12">No payments found.</p>}
 
       {/* Add Payment Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-heading">নতুন পেমেন্ট যোগ করুন</DialogTitle>
+            <DialogTitle className="font-heading">Add New Payment</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {/* Payment Type Toggle */}
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">পেমেন্টের ধরন *</label>
+              <label className="text-xs text-muted-foreground block mb-1">Payment Type *</label>
               <div className="flex gap-2">
                 {([
-                  { key: "customer" as PaymentType, label: "কাস্টমার" },
-                  { key: "moallem" as PaymentType, label: "মোয়াল্লেম" },
-                  { key: "supplier" as PaymentType, label: "সাপ্লায়ার" },
+                  { key: "customer" as PaymentType, label: "Customer" },
+                  { key: "moallem" as PaymentType, label: "Moallem" },
+                  { key: "supplier" as PaymentType, label: "Supplier" },
                 ] as const).map(t => (
                   <button key={t.key}
                     onClick={() => handlePaymentTypeChange(t.key)}

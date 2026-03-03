@@ -8,11 +8,11 @@ const ROLES = ["admin", "accountant", "booking", "cms", "viewer"];
 const PRIMARY_ADMIN_EMAIL = "admin@rahekaba.com";
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
-  admin: "সব মডিউলে সম্পূর্ণ অ্যাক্সেস — Profit, CMS, Settings, Role Management সহ",
-  accountant: "Bookings, Customers, Moallems, Supplier, Payments, Reports — Profit দেখতে পারবে না",
-  booking: "শুধু Bookings ও Customers তৈরি/সম্পাদনা — আর্থিক মডিউলে অ্যাক্সেস নেই",
-  cms: "শুধু CMS কন্টেন্ট ম্যানেজমেন্ট — আর্থিক ডাটায় অ্যাক্সেস নেই",
-  viewer: "সব মডিউলে Read-Only অ্যাক্সেস — কোনো পরিবর্তন করতে পারবে না",
+  admin: "Full access to all modules — including Profit, CMS, Settings, Role Management",
+  accountant: "Bookings, Customers, Moallems, Supplier, Payments, Reports — cannot view Profit",
+  booking: "Only Bookings & Customers create/edit — no access to financial modules",
+  cms: "Only CMS content management — no access to financial data",
+  viewer: "Read-only access to all modules — cannot make any changes",
 };
 
 interface UserWithRole {
@@ -378,7 +378,7 @@ export default function AdminUserManager() {
                               )}
                               <button
                                 onClick={() => {
-                                  if (confirm("Are you sure you want to permanently delete this user?")) {
+                                  if (confirm(`Delete user "${u.full_name || u.email}"? This cannot be undone.`)) {
                                     handleAction(u.user_id, "delete");
                                   }
                                 }}

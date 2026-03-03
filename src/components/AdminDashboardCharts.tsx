@@ -93,17 +93,17 @@ const AdminDashboardCharts = ({
   // Build KPI cards dynamically based on role
   const kpiCards = useMemo(() => {
     const cards: { label: string; value: string | number; icon: any; color: string; onClick: () => void }[] = [
-      { label: "মোট বিক্রয়", value: fmt(totalSales), icon: DollarSign, color: "text-primary", onClick: () => navigate("/admin/bookings") },
-      { label: "আয় প্রাপ্ত", value: fmt(totalIncome), icon: ArrowUpRight, color: "text-emerald", onClick: () => navigate("/admin/payments") },
+      { label: "Total Sales", value: fmt(totalSales), icon: DollarSign, color: "text-primary", onClick: () => navigate("/admin/bookings") },
+      { label: "Income Received", value: fmt(totalIncome), icon: ArrowUpRight, color: "text-emerald", onClick: () => navigate("/admin/payments") },
     ];
     if (canSeeProfit) {
-      cards.push({ label: "নিট লাভ", value: fmt(netProfit), icon: TrendingUp, color: netProfit >= 0 ? "text-emerald" : "text-destructive", onClick: () => navigate("/admin/accounting") });
+      cards.push({ label: "Net Profit", value: fmt(netProfit), icon: TrendingUp, color: netProfit >= 0 ? "text-emerald" : "text-destructive", onClick: () => navigate("/admin/accounting") });
     }
     cards.push(
-      { label: "ক্যাশ ব্যালেন্স", value: fmt(cashBank), icon: Wallet, color: "text-primary", onClick: () => navigate("/admin/accounting") },
-      { label: "মোট বুকিং", value: bookings.length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
-      { label: "মোট হাজী", value: totalHajji, icon: Users, color: "text-foreground", onClick: () => navigate("/admin/customers") },
-      { label: "কাস্টমার বকেয়া", value: fmt(customerDue), icon: UserCheck, color: customerDue > 0 ? "text-yellow-500" : "text-emerald", onClick: () => setShowDueCustomers(true) },
+      { label: "Cash Balance", value: fmt(cashBank), icon: Wallet, color: "text-primary", onClick: () => navigate("/admin/accounting") },
+      { label: "Total Bookings", value: bookings.length, icon: Package, color: "text-foreground", onClick: () => navigate("/admin/bookings") },
+      { label: "Total Hajji", value: totalHajji, icon: Users, color: "text-foreground", onClick: () => navigate("/admin/customers") },
+      { label: "Customer Due", value: fmt(customerDue), icon: UserCheck, color: customerDue > 0 ? "text-yellow-500" : "text-emerald", onClick: () => setShowDueCustomers(true) },
     );
     return cards;
   }, [totalSales, totalIncome, netProfit, cashBank, bookings.length, totalHajji, customerDue, canSeeProfit, navigate]);
@@ -131,33 +131,33 @@ const AdminDashboardCharts = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-xl p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <ArrowUpRight className="h-4 w-4 text-primary" /> প্রাপ্য (Receivable)
+            <ArrowUpRight className="h-4 w-4 text-primary" /> Receivable
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/moallems")}>
-              <span className="text-muted-foreground">মোয়াল্লেম বকেয়া</span><span className="font-bold text-yellow-600">{fmt(moallemDue)}</span>
+              <span className="text-muted-foreground">Moallem Due</span><span className="font-bold text-yellow-600">{fmt(moallemDue)}</span>
             </div>
             <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => setShowDueCustomers(true)}>
-              <span className="text-muted-foreground">কাস্টমার বকেয়া</span><span className="font-bold text-yellow-600">{fmt(customerDue)}</span>
+              <span className="text-muted-foreground">Customer Due</span><span className="font-bold text-yellow-600">{fmt(customerDue)}</span>
             </div>
-            <div className="border-t border-border pt-2 flex justify-between font-bold"><span>মোট</span><span className="text-primary">{fmt(moallemDue + customerDue)}</span></div>
+            <div className="border-t border-border pt-2 flex justify-between font-bold"><span>Total</span><span className="text-primary">{fmt(moallemDue + customerDue)}</span></div>
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <ArrowDownRight className="h-4 w-4 text-destructive" /> প্রদেয় (Payable)
+            <ArrowDownRight className="h-4 w-4 text-destructive" /> Payable
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/supplier-agents")}>
-              <span className="text-muted-foreground">সাপ্লায়ার বকেয়া</span><span className="font-bold text-destructive">{fmt(supplierDue)}</span>
+              <span className="text-muted-foreground">Supplier Due</span><span className="font-bold text-destructive">{fmt(supplierDue)}</span>
             </div>
             {canSeeProfit && (
               <div className="flex justify-between cursor-pointer hover:bg-secondary/30 rounded px-1 -mx-1 py-0.5 transition-colors" onClick={() => navigate("/admin/moallems")}>
-                <span className="text-muted-foreground">কমিশন বকেয়া</span><span className="font-bold text-destructive">{fmt(commissionDue)}</span>
+                <span className="text-muted-foreground">Commission Due</span><span className="font-bold text-destructive">{fmt(commissionDue)}</span>
               </div>
             )}
             <div className="border-t border-border pt-2 flex justify-between font-bold">
-              <span>মোট</span>
+              <span>Total</span>
               <span className="text-destructive">{fmt(supplierDue + (canSeeProfit ? commissionDue : 0))}</span>
             </div>
           </div>
@@ -167,7 +167,7 @@ const AdminDashboardCharts = ({
       {/* ═══ MONTHLY CHART ═══ */}
       <div className="bg-card border border-border rounded-xl p-5">
         <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-          <TrendingUp className="h-4 w-4 text-primary" /> মাসিক বিক্রয় {canSeeProfit && "ও লাভ"}
+          <TrendingUp className="h-4 w-4 text-primary" /> Monthly Sales {canSeeProfit && "& Profit"}
         </h3>
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
@@ -176,8 +176,8 @@ const AdminDashboardCharts = ({
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(220, 10%, 55%)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(220, 10%, 55%)" }} axisLine={false} tickLine={false} tickFormatter={v => `৳${(v / 1000).toFixed(0)}k`} />
               <Tooltip contentStyle={ttStyle} formatter={(v: number) => fmt(v)} />
-              <Bar dataKey="revenue" fill="hsl(40, 65%, 48%)" radius={[4, 4, 0, 0]} name="বিক্রয়" />
-              {canSeeProfit && <Bar dataKey="profit" fill="hsl(160, 50%, 40%)" radius={[4, 4, 0, 0]} name="লাভ" />}
+              <Bar dataKey="revenue" fill="hsl(40, 65%, 48%)" radius={[4, 4, 0, 0]} name="Sales" />
+              {canSeeProfit && <Bar dataKey="profit" fill="hsl(160, 50%, 40%)" radius={[4, 4, 0, 0]} name="Profit" />}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -188,9 +188,9 @@ const AdminDashboardCharts = ({
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" /> সাম্প্রতিক বুকিং
+              <FileText className="h-4 w-4 text-primary" /> Recent Bookings
             </h3>
-            <button onClick={() => navigate("/admin/bookings")} className="text-xs text-primary hover:underline">সব দেখুন</button>
+            <button onClick={() => navigate("/admin/bookings")} className="text-xs text-primary hover:underline">View All</button>
           </div>
           {recentBookings.length > 0 ? (
             <div className="space-y-2">
@@ -207,15 +207,15 @@ const AdminDashboardCharts = ({
                 </div>
               ))}
             </div>
-          ) : <p className="text-sm text-muted-foreground text-center py-8">কোনো বুকিং নেই</p>}
+          ) : <p className="text-sm text-muted-foreground text-center py-8">No bookings yet</p>}
         </div>
 
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-primary" /> সাম্প্রতিক পেমেন্ট
+              <CreditCard className="h-4 w-4 text-primary" /> Recent Payments
             </h3>
-            <button onClick={() => navigate("/admin/payments")} className="text-xs text-primary hover:underline">সব দেখুন</button>
+            <button onClick={() => navigate("/admin/payments")} className="text-xs text-primary hover:underline">View All</button>
           </div>
           {recentPayments.length > 0 ? (
             <div className="space-y-2">
@@ -232,7 +232,7 @@ const AdminDashboardCharts = ({
                 </div>
               ))}
             </div>
-          ) : <p className="text-sm text-muted-foreground text-center py-8">কোনো পেমেন্ট নেই</p>}
+          ) : <p className="text-sm text-muted-foreground text-center py-8">No payments yet</p>}
         </div>
       </div>
 
@@ -242,14 +242,14 @@ const AdminDashboardCharts = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-primary" />
-              বকেয়া কাস্টমার তালিকা
-              <span className="text-sm font-normal text-muted-foreground ml-2">({dueCustomers.length} জন)</span>
+              Due Customer List
+              <span className="text-sm font-normal text-muted-foreground ml-2">({dueCustomers.length} customers)</span>
             </DialogTitle>
           </DialogHeader>
           {dueCustomers.length > 0 ? (
             <div className="space-y-2 mt-2">
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-sm font-medium">মোট বকেয়া</span>
+                <span className="text-sm font-medium">Total Due</span>
                 <span className="text-lg font-bold text-destructive">{fmt(customerDue)}</span>
               </div>
               {dueCustomers.map((c, i) => (
@@ -261,7 +261,7 @@ const AdminDashboardCharts = ({
                     </div>
                     <div className="text-right">
                       <p className="text-base font-bold text-destructive">{fmt(c.totalDue)}</p>
-                      <p className="text-[10px] text-muted-foreground">{c.bookingCount}টি বুকিং</p>
+                      <p className="text-[10px] text-muted-foreground">{c.bookingCount} bookings</p>
                     </div>
                   </div>
                   <div className="space-y-1 mt-2 border-t border-border pt-2">
@@ -269,8 +269,8 @@ const AdminDashboardCharts = ({
                       <div key={b.id} className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">{b.tracking_id} · {b.packages?.name || ""}</span>
                         <div className="flex items-center gap-3">
-                          <span className="text-muted-foreground">মোট: {fmt(Number(b.total_amount))}</span>
-                          <span className="font-semibold text-destructive">বকেয়া: {fmt(Number(b.due_amount))}</span>
+                          <span className="text-muted-foreground">Total: {fmt(Number(b.total_amount))}</span>
+                          <span className="font-semibold text-destructive">Due: {fmt(Number(b.due_amount))}</span>
                         </div>
                       </div>
                     ))}
@@ -279,7 +279,7 @@ const AdminDashboardCharts = ({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">কোনো বকেয়া নেই 🎉</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No dues 🎉</p>
           )}
         </DialogContent>
       </Dialog>
