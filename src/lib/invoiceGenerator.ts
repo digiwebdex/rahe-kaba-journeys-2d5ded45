@@ -660,12 +660,10 @@ async function generateFamilyInvoice(
   y = ((doc as any).lastAutoTable?.finalY || y + 20) + 6;
 
   // Financial summary
-  const summaryY = y;
-  addFinancialSummary(doc, summaryY, totalGross, totalDiscount, totalFinal, Number(booking.paid_amount), Number(booking.due_amount || 0));
+  y = addFinancialSummary(doc, y, totalGross, totalDiscount, totalFinal, Number(booking.paid_amount), Number(booking.due_amount || 0));
 
-  // Payment history
-  y = addPaymentHistoryTable(doc, summaryY, payments);
-  y = Math.max(y, summaryY + 52);
+  // Payment history (below summary, full width)
+  y = addPaymentHistoryTable(doc, y, payments);
 
   // Signature
   y = addSignatureSection(doc, y, sig);
