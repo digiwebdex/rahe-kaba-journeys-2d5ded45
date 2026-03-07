@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   CalendarIcon, FileDown, FileSpreadsheet, ChevronDown, ChevronUp, Users,
   TrendingUp, TrendingDown, DollarSign, Filter, Search, Package, Building2,
-  BarChart3, Briefcase
+  BarChart3, Briefcase, ClipboardList
 } from "lucide-react";
 import {
   format, parseISO, isSameDay, getYear, getMonth, isWithinInterval,
