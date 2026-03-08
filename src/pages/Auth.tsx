@@ -7,7 +7,7 @@ import { Eye, EyeOff, Phone, Mail, Shield, CheckCircle2, XCircle } from "lucide-
 import { useLanguage } from "@/i18n/LanguageContext";
 import { normalizePhone, getPhoneError, handlePhoneChange } from "@/lib/phoneValidation";
 
-type AuthMode = "login" | "register" | "otp" | "forgot";
+type AuthMode = "login" | "register" | "forgot";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -150,16 +150,12 @@ const Auth = () => {
           <h1 className="font-heading text-2xl font-bold mt-4">
             {mode === "login" && t("auth.welcomeBack")}
             {mode === "register" && t("auth.createAccount")}
-            {mode === "otp" && t("auth.phoneLogin")}
             {mode === "forgot" && t("auth.resetPassword")}
-            
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {mode === "login" && t("auth.signInDesc")}
             {mode === "register" && t("auth.registerDesc")}
-            {mode === "otp" && t("auth.otpDesc")}
             {mode === "forgot" && t("auth.forgotDesc")}
-            
           </p>
         </div>
 
@@ -256,47 +252,6 @@ const Auth = () => {
           </form>
         )}
 
-        {mode === "otp" && (
-          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-            {!otpSent ? (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">{t("auth.phoneNumber")}</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-                    <input type="tel" value={otpPhone} onChange={(e) => setOtpPhone(e.target.value)}
-                      className={`${inputClass} pl-10`} placeholder={t("auth.phonePlaceholder")} maxLength={15} />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{t("auth.enterPhone")}</p>
-                </div>
-                <button onClick={handleSendOtp} disabled={loading}
-                  className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3 rounded-md text-sm hover:opacity-90 transition-opacity shadow-gold disabled:opacity-50">
-                  {loading ? t("auth.sending") : t("auth.sendOtp")}
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-center text-muted-foreground">
-                  {t("auth.otpSentTo")} <span className="text-primary font-medium">{otpPhone}</span>
-                </p>
-                <div>
-                  <input type="text" inputMode="numeric" maxLength={6} value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                    className={`${inputClass} text-center text-2xl tracking-[0.5em] font-mono`}
-                    placeholder="000000" />
-                </div>
-                <button onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6}
-                  className="w-full bg-gradient-gold text-primary-foreground font-semibold py-3 rounded-md text-sm hover:opacity-90 transition-opacity shadow-gold disabled:opacity-50">
-                  {loading ? t("auth.verifying") : t("auth.verifyLogin")}
-                </button>
-                <button onClick={() => { setOtpSent(false); setOtpCode(""); }}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground">
-                  {t("auth.resendOrChange")}
-                </button>
-              </>
-            )}
-          </div>
-        )}
 
         {mode === "forgot" && (
           <form onSubmit={handleForgotPassword} className="bg-card border border-border rounded-xl p-6 space-y-4">
@@ -327,7 +282,7 @@ const Auth = () => {
               <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">{t("auth.signIn")}</button>
             </p>
           )}
-          {(mode === "otp" || mode === "forgot") && (
+          {(mode === "forgot") && (
             <p>
               <button onClick={() => setMode("login")} className="text-primary hover:underline font-medium">{t("auth.backToSignIn")}</button>
             </p>
