@@ -335,18 +335,8 @@ export default function AdminAccountingPage() {
               <Plus className="h-4 w-4" /> নতুন খরচ
             </button>
           )}
-          <button onClick={() => {
-            if (tab === "expenses") exportPDF({ title: "Expenses Report", columns: ["Title", "Type", "Category", "Amount", "Date"], rows: filtered.map(e => [e.title, e.expense_type, e.category, Number(e.amount), new Date(e.date).toLocaleDateString()]) });
-            else if (tab === "booking") exportPDF({ title: "Booking Profit Report", columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"], rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]) });
-            else if (tab === "package") exportPDF({ title: "Package Profit Report", columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"], rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]) });
-            else if (tab === "customer") exportPDF({ title: "Customer Profit Report", columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"], rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]) });
-          }} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileDown className="h-3.5 w-3.5" />PDF</button>
-          <button onClick={() => {
-            if (tab === "expenses") exportExcel({ title: "Expenses Report", columns: ["Title", "Type", "Category", "Amount", "Date"], rows: filtered.map(e => [e.title, e.expense_type, e.category, Number(e.amount), new Date(e.date).toLocaleDateString()]) });
-            else if (tab === "booking") exportExcel({ title: "Booking Profit Report", columns: ["Tracking ID", "Customer", "Package", "Revenue", "Expenses", "Profit"], rows: bookingProfit.map((b: any) => [b.tracking_id || "—", b.guest_name || "—", b.package_name || "—", Number(b.total_payments || 0), Number(b.total_expenses || 0), Number(b.profit_amount || 0)]) });
-            else if (tab === "package") exportExcel({ title: "Package Profit Report", columns: ["Package", "Type", "Bookings", "Revenue", "Expenses", "Profit"], rows: packageProfit.map((p: any) => [p.package_name || "—", p.package_type || "—", Number(p.total_bookings || 0), Number(p.total_revenue || 0), Number(p.total_expenses || 0), Number(p.profit || 0)]) });
-            else if (tab === "customer") exportExcel({ title: "Customer Profit Report", columns: ["Customer", "Phone", "Bookings", "Payments", "Expenses", "Profit"], rows: customerProfit.map((c: any) => [c.full_name || "—", c.phone || "—", Number(c.total_bookings || 0), Number(c.total_payments || 0), Number(c.total_expenses || 0), Number(c.profit || 0)]) });
-          }} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
+          <button onClick={handleTopExportPDF} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileDown className="h-3.5 w-3.5" />PDF</button>
+          <button onClick={handleTopExportExcel} className="inline-flex items-center gap-1 text-xs bg-secondary px-3 py-1.5 rounded-md hover:bg-muted transition-colors"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
         </div>
       </div>
 
