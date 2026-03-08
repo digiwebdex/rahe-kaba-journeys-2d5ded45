@@ -761,7 +761,7 @@ export async function generateReceipt(
   y += 8;
 
   // Customer box
-  y = addCustomerSection(doc, y, customer);
+  y = await addCustomerSection(doc, y, customer);
 
   // Payment details table
   autoTable(doc, {
