@@ -130,7 +130,8 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     if (error) { toast.error(error.message); return; }
     toast.success("মুছে ফেলা হয়েছে");
     setDeleteId(null);
-    fetchData();
+    await fetchData();
+    await onEntriesChanged?.();
   };
 
   // Normalize date to YYYY-MM-DD (handles ISO timestamps from API)
