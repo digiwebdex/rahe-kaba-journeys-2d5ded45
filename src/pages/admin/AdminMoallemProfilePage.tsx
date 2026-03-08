@@ -34,11 +34,14 @@ export default function AdminMoallemProfilePage() {
   const [moallemPayments, setMoallemPayments] = useState<any[]>([]);
   const [commissionPayments, setCommissionPayments] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [moallemItems, setMoallemItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pdfBookingFilter, setPdfBookingFilter] = useState<"due" | "all">("due");
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showCommissionForm, setShowCommissionForm] = useState(false);
+  const [showItemForm, setShowItemForm] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [itemForm, setItemForm] = useState({ description: "", quantity: "1", unit_price: "0" });
 
   // Date filter
   const [dateFrom, setDateFrom] = useState("");
