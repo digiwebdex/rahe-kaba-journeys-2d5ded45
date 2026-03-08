@@ -682,6 +682,7 @@ export async function generateInvoice(
   company: CompanyInfo
 ) {
   const doc = new jsPDF();
+  await registerBengaliFont(doc);
   const [logoBase64, sig, qrDataUrl] = await Promise.all([
     loadLogoBase64(),
     getSignatureData(),
