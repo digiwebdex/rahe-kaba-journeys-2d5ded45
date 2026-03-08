@@ -97,7 +97,8 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
     toast.success(form.type === "income" ? "জমা রেকর্ড হয়েছে" : "খরচ রেকর্ড হয়েছে");
     setShowForm(false);
     setForm({ ...EMPTY_FORM });
-    fetchData();
+    await fetchData();
+    await onEntriesChanged?.();
   };
 
   const startEdit = (entry: any) => {
