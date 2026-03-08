@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, FileText, CreditCard, TrendingDown,
   Phone, MapPin, CalendarDays, Hash, Plus, Wallet, Download,
+  Package, Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { generateMoallemPdf, getCompanyInfoForPdf, MoallemPdfData } from "@/lib/entityPdfGenerator";
