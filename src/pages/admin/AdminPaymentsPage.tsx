@@ -62,7 +62,7 @@ export default function AdminPaymentsPage() {
   const [addForm, setAddForm] = useState({
     customer_id: "", booking_id: "", amount: "",
     payment_method: "cash", transaction_id: "", paid_date: new Date().toISOString().split("T")[0],
-    notes: "", wallet_account_id: "", moallem_id: "", supplier_id: "",
+    notes: "", wallet_account_id: "", moallem_id: "", supplier_id: "", service_type: "",
   });
   const [addLoading, setAddLoading] = useState(false);
   const [selectedBookingInfo, setSelectedBookingInfo] = useState<any>(null);
