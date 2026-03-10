@@ -164,7 +164,12 @@ export default function AdminSupplierAgentProfilePage() {
         paid_to_supplier: Number(b.paid_to_supplier || 0),
         supplier_due: Number(b.supplier_due || 0), status: b.status,
       })),
-      agentPayments: filteredPayments.map(p => ({ amount: Number(p.amount), date: p.date, method: p.payment_method || "cash", notes: p.notes })),
+      agentPayments: filteredPayments.map(p => {
+        const serviceMatch = SERVICE_TYPES.find(s => s.value && p.notes?.startsWith(s.label));
+        const category = serviceMatch?.label || "";
+        const cleanNotes = serviceMatch ? (p.notes?.replace(serviceMatch.label, "").replace(/^\s*—\s*/, "").trim() || "") : (p.notes || "");
+        return { amount: Number(p.amount), date: p.date, method: p.payment_method || "cash", notes: cleanNotes, category };
+      }),
       contracts: contracts.map((c: any) => ({
         contract_amount: Number(c.contract_amount || 0),
         pilgrim_count: Number(c.pilgrim_count || 0),
