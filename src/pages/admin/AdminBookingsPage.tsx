@@ -262,11 +262,27 @@ export default function AdminBookingsPage() {
 
   const confirmDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from("bookings").delete().eq("id", deleteId);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Booking deleted");
-    setDeleteId(null);
-    fetchBookings();
+    try {
+      // Delete all dependent records first to avoid FK constraint violations
+      await Promise.all([
+        supabase.from("payments").delete().eq("booking_id", deleteId),
+        supabase.from("expenses").delete().eq("booking_id", deleteId),
+        supabase.from("booking_members").delete().eq("booking_id", deleteId),
+        supabase.from("booking_documents").delete().eq("booking_id", deleteId),
+        supabase.from("moallem_payments").delete().eq("booking_id", deleteId),
+        supabase.from("moallem_commission_payments").delete().eq("booking_id", deleteId),
+        supabase.from("supplier_agent_payments").delete().eq("booking_id", deleteId),
+        supabase.from("notification_logs").delete().eq("booking_id", deleteId),
+        supabase.from("transactions").delete().eq("booking_id", deleteId),
+      ]);
+      const { error } = await supabase.from("bookings").delete().eq("id", deleteId);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Booking and all related records deleted");
+      setDeleteId(null);
+      fetchBookings();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete booking");
+    }
   };
 
   const handleDuplicate = async (b: any) => {
