@@ -89,7 +89,7 @@ const createCrudRoutes = (tableName, options = {}) => {
           ilike: 'ILIKE',
         }[operator] || '=';
 
-        params.push(operator === 'ilike' ? String(value).replace(/%/g, '') + '%' : value);
+        params.push(operator === 'ilike' ? `%${String(value).replace(/%/g, '')}%` : value);
         conditions.push(`${column} ${sqlOp} $${params.length}`);
       });
 
