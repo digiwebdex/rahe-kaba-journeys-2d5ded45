@@ -187,6 +187,10 @@ export default function AdminPaymentsPage() {
   const handleAddPayment = async () => {
     if (!addForm.amount || parseFloat(addForm.amount) <= 0) { toast.error("Enter a valid amount"); return; }
     
+    // Build combined notes with service type
+    const serviceLabel = SERVICE_TYPES.find(s => s.value === addForm.service_type)?.label || "";
+    const combinedNotes = [serviceLabel, addForm.notes.trim()].filter(Boolean).join(" — ") || null;
+
     if (paymentType === "customer") {
       if (!addForm.booking_id) { toast.error("Please select a booking"); return; }
       setAddLoading(true);
@@ -204,7 +208,7 @@ export default function AdminPaymentsPage() {
           payment_method: addForm.payment_method, transaction_id: addForm.transaction_id.trim() || null,
           status: "completed", paid_at: new Date(addForm.paid_date).toISOString(),
           due_date: addForm.paid_date, installment_number: maxInstallment + 1,
-          notes: addForm.notes.trim() || null, wallet_account_id: addForm.wallet_account_id || null,
+          notes: combinedNotes, wallet_account_id: addForm.wallet_account_id || null,
           receipt_file_path: receiptPath,
         } as any);
         if (error) throw error;
@@ -226,7 +230,7 @@ export default function AdminPaymentsPage() {
           amount: parseFloat(addForm.amount),
           payment_method: addForm.payment_method,
           date: addForm.paid_date,
-          notes: addForm.notes.trim() || null,
+          notes: combinedNotes,
           wallet_account_id: addForm.wallet_account_id || null,
           recorded_by: session?.user?.id || null,
           receipt_file_path: receiptPath,
@@ -250,7 +254,7 @@ export default function AdminPaymentsPage() {
           amount: parseFloat(addForm.amount),
           payment_method: addForm.payment_method,
           date: addForm.paid_date,
-          notes: addForm.notes.trim() || null,
+          notes: combinedNotes,
           wallet_account_id: addForm.wallet_account_id || null,
           recorded_by: session?.user?.id || null,
           receipt_file_path: receiptPath,
