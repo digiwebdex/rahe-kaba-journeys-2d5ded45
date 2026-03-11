@@ -398,7 +398,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-muted-foreground text-xs block">শহর</span>
+                  <span className="text-muted-foreground text-xs block">City</span>
                   <span className="font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> {viewHotel.city}</span>
                 </div>
                 <div>
