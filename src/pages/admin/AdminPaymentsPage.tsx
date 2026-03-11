@@ -907,7 +907,7 @@ export default function AdminPaymentsPage() {
               {paymentType === "customer" && (
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">Transaction ID</label>
-                  <input className={inputClass} value={addForm.transaction_id} onChange={(e) => setAddForm({ ...addForm, transaction_id: e.target.value })} placeholder="ঐচ্ছিক" maxLength={50} />
+                  <input className={inputClass} value={addForm.transaction_id} onChange={(e) => setAddForm({ ...addForm, transaction_id: e.target.value })} placeholder="Optional" maxLength={50} />
                 </div>
               )}
               <div>
