@@ -332,7 +332,7 @@ const AdminHotelManager = ({ hotels, onRefresh }: Props) => {
                                   {room.description && <p className="text-xs text-muted-foreground truncate">{room.description}</p>}
                                   <div className="flex flex-wrap items-center gap-2 mt-1">
                                     <span className="text-xs text-muted-foreground">👥 {room.capacity}</span>
-                                    <span className="text-xs font-semibold text-primary">৳{Number(room.price_per_night).toLocaleString()}/night</span>
+                                    <span className="text-xs font-semibold text-primary">BDT {Number(room.price_per_night).toLocaleString()}/night</span>
                                   </div>
                                   {roomAmenities.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-1">
