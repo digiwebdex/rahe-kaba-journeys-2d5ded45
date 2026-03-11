@@ -117,8 +117,8 @@ export default function AdminAccountingPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) { toast.error("শিরোনাম আবশ্যক"); return; }
-    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("সঠিক পরিমাণ দিন"); return; }
+    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    if (!form.amount || parseFloat(form.amount) <= 0) { toast.error("Enter a valid amount"); return; }
     const payload: any = {
       title: form.title.trim(), amount: parseFloat(form.amount), expense_type: form.expense_type,
       category: form.category, note: form.note.trim() || null, date: form.date || undefined,
