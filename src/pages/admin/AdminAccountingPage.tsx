@@ -658,11 +658,11 @@ export default function AdminAccountingPage() {
           {viewExpense && (
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2"><span className="text-muted-foreground text-xs block">শিরোনাম</span><span className="font-medium text-base">{viewExpense.title}</span></div>
-                <div><span className="text-muted-foreground text-xs block">পরিমাণ</span><span className="font-bold text-destructive text-lg">{fmt(viewExpense.amount)}</span></div>
-                <div><span className="text-muted-foreground text-xs block">তারিখ</span><span className="font-medium">{new Date(viewExpense.date).toLocaleDateString()}</span></div>
-                <div><span className="text-muted-foreground text-xs block">ধরন</span><span className="font-medium capitalize">{EXPENSE_TYPES.find(t => t.value === viewExpense.expense_type)?.label || viewExpense.expense_type}</span></div>
-                <div><span className="text-muted-foreground text-xs block">অ্যাসাইনমেন্ট</span><span className="font-medium capitalize">{ASSIGN_TO.find(a => a.value === viewExpense.category)?.label || viewExpense.category || "সাধারণ"}</span></div>
+                <div className="col-span-2"><span className="text-muted-foreground text-xs block">Title</span><span className="font-medium text-base">{viewExpense.title}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Amount</span><span className="font-bold text-destructive text-lg">{fmt(viewExpense.amount)}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Date</span><span className="font-medium">{new Date(viewExpense.date).toLocaleDateString()}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Type</span><span className="font-medium capitalize">{EXPENSE_TYPES.find(t => t.value === viewExpense.expense_type)?.label || viewExpense.expense_type}</span></div>
+                <div><span className="text-muted-foreground text-xs block">Assignment</span><span className="font-medium capitalize">{ASSIGN_TO.find(a => a.value === viewExpense.category)?.label || viewExpense.category || "General"}</span></div>
                 {viewExpense.booking_id && (
                   <div className="col-span-2"><span className="text-muted-foreground text-xs block">বুকিং</span><span className="font-medium">📋 {getBookingLabel(viewExpense.booking_id)}</span></div>
                 )}
