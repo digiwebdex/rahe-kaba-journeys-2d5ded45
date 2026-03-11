@@ -402,7 +402,7 @@ export default function AdminAccountingPage() {
               {EXPENSE_TYPES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
             </select>
             <select className={inputClass + " w-auto"} value={filterAssign} onChange={(e) => setFilterAssign(e.target.value)}>
-              <option value="all">সকল অ্যাসাইনমেন্ট</option>
+              <option value="all">All Assignments</option>
               {ASSIGN_TO.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
             </select>
             <span className="text-xs text-muted-foreground ml-auto">{filtered.length} টি খরচ</span>
