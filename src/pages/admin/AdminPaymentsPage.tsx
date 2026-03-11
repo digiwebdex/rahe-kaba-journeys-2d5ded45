@@ -975,7 +975,7 @@ export default function AdminPaymentsPage() {
             <div className="space-y-4 text-sm">
               <div className="mb-2">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${vBadge.cls}`}>
-                  {viewPayment._type === "moallem" ? "মোয়াল্লেম পেমেন্ট" : viewPayment._type === "supplier" ? "সাপ্লায়ার পেমেন্ট" : "কাস্টমার পেমেন্ট"}
+                  {viewPayment._type === "moallem" ? "Moallem Payment" : viewPayment._type === "supplier" ? "Supplier Payment" : "Customer Payment"}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3">
