@@ -238,6 +238,7 @@ export async function exportPDF({ title, columns, rows, summary }: ReportData) {
     headStyles: { fillColor: [DARK.r, DARK.g, DARK.b], font: "NotoSansBengali", fontStyle: "bold", fontSize: 7.5 },
     alternateRowStyles: { fillColor: [250, 249, 247] },
     margin: { left: 14, right: 14 },
+    didDrawCell: bengaliCellHook,
   });
 
   y = (doc as any).lastAutoTable?.finalY + 8 || 50;
