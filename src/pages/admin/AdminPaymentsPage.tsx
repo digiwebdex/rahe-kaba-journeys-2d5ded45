@@ -937,7 +937,7 @@ export default function AdminPaymentsPage() {
               ) : (
                 <label className="flex items-center gap-2 cursor-pointer w-full border-2 border-dashed border-border rounded-lg p-3 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
                   <Upload className="h-4 w-4" />
-                  <span className="text-xs">রিসিট আপলোড করুন (ছবি/PDF, সর্বোচ্চ 5MB)</span>
+                  <span className="text-xs">Upload receipt (Image/PDF, max 5MB)</span>
                   <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f && f.size > 5 * 1024 * 1024) { toast.error("ফাইল 5MB এর কম হতে হবে"); return; }
