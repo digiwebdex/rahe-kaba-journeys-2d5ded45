@@ -379,7 +379,7 @@ export default function AdminCreateBookingPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total Selling</p>
-            <p className="font-heading font-bold text-foreground">৳{totalSellingPrice.toLocaleString()}</p>
+            <p className="font-heading font-bold text-foreground">BDT {totalSellingPrice.toLocaleString()}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Due</p>
