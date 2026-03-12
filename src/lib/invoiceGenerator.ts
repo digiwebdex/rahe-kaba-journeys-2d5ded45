@@ -780,12 +780,13 @@ export async function generateInvoice(
     moallemName = await fetchMoallemName(booking.moallem_id);
   }
 
-  const normalizedType = (booking.booking_type || "").toLowerCase();
-  const members = booking.id ? await fetchBookingMembers(booking.id) : [];
-  const shouldRenderFamily = normalizedType === "family" || members.length > 0;
+  const normalizedType = normalizeBookingType(booking.booking_type);
+  const dbMembers = booking.id ? await fetchBookingMembers(booking.id) : [];
+  const hasFamilySignal = normalizedType.includes("family") || Number(booking.num_travelers || 1) > 1 || dbMembers.length > 0;
+  const invoiceMembers = dbMembers.length > 0 ? dbMembers : (hasFamilySignal ? buildFallbackMembers(booking, customer) : []);
 
-  if (shouldRenderFamily && members.length > 0) {
-    await generateFamilyInvoice(doc, booking, customer, payments, members, logoBase64, sig, qrDataUrl, moallemName);
+  if (hasFamilySignal && invoiceMembers.length > 0) {
+    await generateFamilyInvoice(doc, booking, customer, payments, invoiceMembers, logoBase64, sig, qrDataUrl, moallemName);
   } else {
     await generateIndividualInvoice(doc, booking, customer, payments, logoBase64, sig, qrDataUrl, moallemName);
   }
