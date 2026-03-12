@@ -186,7 +186,7 @@ export default function AdminBookingsPage() {
   const [bookingPayments, setBookingPayments] = useState<Record<string, any[]>>({});
 
   const fetchBookings = () =>
-    supabase.from("bookings").select("*, packages(name, type, duration_days, price), moallems(name, phone)")
+    supabase.from("bookings").select("*, packages(name, type, duration_days, price, start_date), moallems(name, phone)")
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error("fetchBookings error:", error);
@@ -324,7 +324,7 @@ export default function AdminBookingsPage() {
     try {
       const { data: payments } = await supabase.from("payments").select("*").eq("booking_id", b.id).order("installment_number", { ascending: true });
       const company = await getCompanyInfoForPdf();
-      await generateInvoice({ ...b, packages: b.packages }, { full_name: b.guest_name, phone: b.guest_phone, passport_number: b.guest_passport, address: b.guest_address }, (payments || []) as InvoicePayment[], company);
+      await generateInvoice({ ...b, packages: b.packages }, { full_name: b.guest_name, phone: b.guest_phone, passport_number: b.guest_passport, address: b.guest_address, email: b.guest_email }, (payments || []) as InvoicePayment[], company);
       toast.success("Invoice downloaded");
     } catch { toast.error("Failed to generate invoice"); }
     setGeneratingId(null);
