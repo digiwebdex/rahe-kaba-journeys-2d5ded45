@@ -218,7 +218,7 @@ export default function AdminBookingsPage() {
     if (searchParams.get("action") === "create") navigate("/admin/bookings/create", { replace: true });
   }, [searchParams]);
 
-  const startEdit = (b: any) => {
+  const startEdit = async (b: any) => {
     setEditingId(b.id);
     setEditForm({
       status: b.status, selling_price_per_person: Number(b.selling_price_per_person || 0),
@@ -230,7 +230,18 @@ export default function AdminBookingsPage() {
       guest_email: b.guest_email || "", guest_address: b.guest_address || "",
       guest_passport: b.guest_passport || "", user_id: b.user_id || null,
       moallem_id: b.moallem_id || "",
+      booking_type: b.booking_type || "individual",
     });
+    // Load family members if family booking
+    if (b.booking_type === "family") {
+      const { data } = await supabase.from("booking_members")
+        .select("*, packages(name)")
+        .eq("booking_id", b.id)
+        .order("created_at", { ascending: true });
+      setEditMembers(data || []);
+    } else {
+      setEditMembers([]);
+    }
   };
 
   const editTotalSelling = editingId ? (Number(editForm.selling_price_per_person || 0) * Number(editForm.num_travelers || 1)) : 0;
