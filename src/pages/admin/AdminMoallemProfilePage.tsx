@@ -165,7 +165,17 @@ export default function AdminMoallemProfilePage() {
   const startEditPayment = (p: any, type: "payment" | "commission") => {
     setEditPaymentId(p.id);
     setEditPaymentType(type);
-    setEditPaymentForm({ amount: String(p.amount), payment_method: p.payment_method || "cash", date: p.date || "", notes: p.notes || "" });
+    // Extract service from notes
+    const noteParts = (p.notes || "").split(" — ");
+    const foundService = SERVICE_TYPES.find(s => s.label === noteParts[0]);
+    const serviceType = foundService ? foundService.value : "";
+    const restNotes = foundService ? noteParts.slice(1).join(" — ") : (p.notes || "");
+    setEditPaymentForm({
+      amount: String(p.amount), payment_method: p.payment_method || "cash",
+      date: p.date || "", notes: restNotes,
+      service_type: serviceType, booking_id: p.booking_id || "",
+      wallet_account_id: p.wallet_account_id || "",
+    });
     setShowEditPaymentModal(true);
   };
 
