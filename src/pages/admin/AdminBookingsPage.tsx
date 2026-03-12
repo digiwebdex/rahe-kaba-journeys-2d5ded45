@@ -889,7 +889,10 @@ export default function AdminBookingsPage() {
           )}
         </div>
       ))}
-      {filtered.length === 0 && <p className="text-center text-muted-foreground py-12">No bookings found.</p>}
+      {bookingsLoading && <p className="text-center text-muted-foreground py-12">Loading bookings...</p>}
+      {!bookingsLoading && filtered.length === 0 && (
+        <p className="text-center text-muted-foreground py-12">{bookingsError ? `Failed to load bookings: ${bookingsError}` : "No bookings found."}</p>
+      )}
 
       {/* View Booking Modal */}
       <Dialog open={!!viewBooking} onOpenChange={(o) => { if (!o) setViewBooking(null); }}>
