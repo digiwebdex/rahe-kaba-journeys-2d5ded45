@@ -606,6 +606,7 @@ export default function AdminBookingsPage() {
                 </div>
               )}
 
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">Status</label>
                   <select className={inputClass} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
