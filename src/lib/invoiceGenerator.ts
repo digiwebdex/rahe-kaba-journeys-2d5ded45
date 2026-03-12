@@ -139,12 +139,12 @@ async function fetchPackageNameMap(packageIds: string[]): Promise<Record<string,
     return {};
   }
 
-  return (data || []).reduce<Record<string, string>>((acc, row: any) => {
+  return (data || []).reduce((acc: Record<string, string>, row: any) => {
     const id = cleanText(row?.id);
     const name = cleanText(row?.name);
     if (id && name) acc[id] = name;
     return acc;
-  }, {});
+  }, {} as Record<string, string>);
 }
 
 function normalizeMembers(members: Partial<BookingMember>[], fallbackPackageName: string): BookingMember[] {
