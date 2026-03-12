@@ -402,14 +402,15 @@ export default function AdminCalculatorPage() {
         )}
       </div>
 
-      {/* PDF Download - only show when data is filled */}
-      {(costPerPerson > 0 || sellingPricePerPerson > 0) && (
-        <div className="flex justify-center">
-          <Button size="lg" onClick={handleDownloadPdf} className="gap-2">
-            <FileDown className="h-5 w-5" /> Download PDF Report
-          </Button>
-        </div>
-      )}
+      {/* PDF Download & Reset buttons */}
+      <div className="flex justify-center gap-3">
+        <Button size="lg" variant="outline" onClick={handleReset} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
+          <RotateCcw className="h-5 w-5" /> Reset
+        </Button>
+        <Button size="lg" onClick={handleDownloadPdf} className="gap-2">
+          <FileDown className="h-5 w-5" /> Download PDF Report
+        </Button>
+      </div>
     </div>
   );
 }
