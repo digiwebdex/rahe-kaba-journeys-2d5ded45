@@ -252,6 +252,9 @@ export default function AdminCalculatorPage() {
           <Calculator className="h-5 w-5 text-primary" />
           Group Cost Calculator
         </h1>
+        <Button size="sm" variant="outline" onClick={handleReset} className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10">
+          <RotateCcw className="h-4 w-4" /> Reset
+        </Button>
       </div>
 
       {/* Group Info */}
