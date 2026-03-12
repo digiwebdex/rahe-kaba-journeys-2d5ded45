@@ -256,8 +256,8 @@ function buildFallbackMembers(booking: InvoiceBooking, customer: InvoiceCustomer
     const final = Math.max(0, gross - discount);
 
     return {
-      full_name: index === 0 ? cleanText(customer.full_name, "Primary Traveler") : `Traveler ${index + 1}`,
-      passport_number: index === 0 ? (cleanText(customer.passport_number) || null) : null,
+      full_name: "",
+      passport_number: null,
       selling_price: gross,
       discount,
       final_price: final,
