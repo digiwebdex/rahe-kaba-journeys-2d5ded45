@@ -136,7 +136,15 @@ export default function AdminSupplierAgentProfilePage() {
 
   const startEditPayment = (p: any) => {
     setEditPaymentId(p.id);
-    setEditPaymentForm({ amount: String(p.amount), payment_method: p.payment_method || "cash", date: p.date || "", notes: p.notes || "" });
+    const noteParts = (p.notes || "").split(" — ");
+    const foundService = SERVICE_TYPES.find(s => s.label === noteParts[0]);
+    const serviceType = foundService ? foundService.value : "";
+    const restNotes = foundService ? noteParts.slice(1).join(" — ") : (p.notes || "");
+    setEditPaymentForm({
+      amount: String(p.amount), payment_method: p.payment_method || "cash",
+      date: p.date || "", notes: restNotes,
+      service_type: serviceType, wallet_account_id: p.wallet_account_id || "",
+    });
     setShowEditPaymentModal(true);
   };
 
