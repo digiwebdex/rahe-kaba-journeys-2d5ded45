@@ -16,6 +16,7 @@ export interface CompanyInfo {
 export interface InvoiceCustomer {
   full_name?: string | null;
   phone?: string | null;
+  email?: string | null;
   passport_number?: string | null;
   address?: string | null;
 }
@@ -34,6 +35,7 @@ export interface InvoiceBooking {
   moallem_id?: string | null;
   packages?: { name: string; type?: string; duration_days?: number | null; start_date?: string | null } | null;
   selling_price_per_person?: number | null;
+  notes?: string | null;
 }
 
 export interface InvoicePayment {
@@ -212,14 +214,20 @@ function addInvoiceTitleBlock(
 }
 
 async function addCustomerSection(
-  doc: jsPDF, y: number, customer: InvoiceCustomer, moallemName?: string | null, totalMembers?: number
+  doc: jsPDF, y: number, customer: InvoiceCustomer, moallemName?: string | null, totalMembers?: number, notes?: string | null
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Calculate box height based on content
+  let extraRows = 0;
+  if (customer.email) extraRows++;
+  if (moallemName || totalMembers) extraRows++;
+  if (notes) extraRows++;
+  const boxH = 26 + (extraRows * 6);
 
   // Section header
   doc.setFillColor(LIGHT_BG.r, LIGHT_BG.g, LIGHT_BG.b);
   doc.setDrawColor(220);
-  const boxH = moallemName || totalMembers ? 32 : 26;
   doc.rect(14, y, pageWidth - 28, boxH, "FD");
 
   doc.setFontSize(9);
@@ -240,6 +248,7 @@ async function addCustomerSection(
   const col2 = pageWidth / 2 + 5;
   let row = y + 14;
 
+  // Row 1: Name & Phone
   doc.setFont("helvetica", "bold");
   doc.text("Name:", col1, row);
   doc.setFont("helvetica", "normal");
@@ -255,6 +264,7 @@ async function addCustomerSection(
   doc.setFont("helvetica", "normal");
   doc.text(customer.phone || "N/A", col2 + 18, row);
 
+  // Row 2: Passport & Address
   row += 6;
   doc.setFont("helvetica", "bold");
   doc.text("Passport:", col1, row);
@@ -267,6 +277,16 @@ async function addCustomerSection(
   const addr = customer.address || "N/A";
   doc.text(addr.length > 40 ? addr.substring(0, 40) + "..." : addr, col2 + 18, row);
 
+  // Row 3: Email (if available)
+  if (customer.email) {
+    row += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("Email:", col1, row);
+    doc.setFont("helvetica", "normal");
+    doc.text(customer.email, col1 + 18, row);
+  }
+
+  // Row 4: Moallem & Members
   if (moallemName || totalMembers) {
     row += 6;
     if (moallemName) {
@@ -281,6 +301,16 @@ async function addCustomerSection(
       doc.setFont("helvetica", "normal");
       doc.text(String(totalMembers), col2 + 28, row);
     }
+  }
+
+  // Row 5: Notes (if available)
+  if (notes) {
+    row += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("Notes:", col1, row);
+    doc.setFont("helvetica", "normal");
+    const noteText = notes.length > 80 ? notes.substring(0, 80) + "..." : notes;
+    doc.text(noteText, col1 + 18, row);
   }
 
   doc.setTextColor(0);
@@ -539,7 +569,7 @@ async function generateIndividualInvoice(
   y = addInvoiceTitleBlock(doc, y, booking.tracking_id, new Date().toISOString(), booking.packages?.start_date || null, booking.status, false);
 
   // Customer section
-  y = await addCustomerSection(doc, y, customer, moallemName);
+  y = await addCustomerSection(doc, y, customer, moallemName, undefined, booking.notes);
 
   // Service table
   y = addSectionTitle(doc, y, "SERVICE DETAILS");
@@ -610,7 +640,7 @@ async function generateFamilyInvoice(
 
   y = addInvoiceTitleBlock(doc, y, booking.tracking_id, new Date().toISOString(), booking.packages?.start_date || null, booking.status, true);
 
-  y = await addCustomerSection(doc, y, customer, moallemName, members.length || booking.num_travelers);
+  y = await addCustomerSection(doc, y, customer, moallemName, members.length || booking.num_travelers, booking.notes);
 
   // Members table
   y = addSectionTitle(doc, y, "FAMILY MEMBERS");

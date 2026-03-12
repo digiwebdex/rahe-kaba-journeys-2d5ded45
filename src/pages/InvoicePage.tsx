@@ -45,15 +45,23 @@ export default function InvoicePage() {
       return;
     }
 
-    const [payRes, profRes, sigRes] = await Promise.all([
+    const [payRes, profRes, sigRes, moallemRes] = await Promise.all([
       supabase.from("payments").select("*").eq("booking_id", bk.id).order("installment_number"),
-      bk.user_id ? supabase.from("profiles").select("full_name, phone, passport_number, address").eq("user_id", bk.user_id).single() : Promise.resolve({ data: null }),
+      bk.user_id ? supabase.from("profiles").select("full_name, phone, passport_number, address, email").eq("user_id", bk.user_id).single() : Promise.resolve({ data: null }),
       supabase.from("company_settings").select("setting_value").eq("setting_key", "signature").maybeSingle(),
+      bk.moallem_id ? supabase.from("moallems").select("name").eq("id", bk.moallem_id).single() : Promise.resolve({ data: null }),
     ]);
 
     setBooking(bk);
     setPayments(payRes.data || []);
-    setCustomer(profRes.data || { full_name: bk.guest_name, phone: bk.guest_phone, passport_number: bk.guest_passport, address: bk.guest_address });
+    setCustomer({
+      full_name: profRes.data?.full_name || bk.guest_name,
+      phone: profRes.data?.phone || bk.guest_phone,
+      passport_number: profRes.data?.passport_number || bk.guest_passport,
+      address: profRes.data?.address || bk.guest_address,
+      email: profRes.data?.email || bk.guest_email,
+      moallem_name: moallemRes.data?.name || null,
+    });
     if (sigRes.data?.setting_value) setSignatureData(sigRes.data.setting_value);
     setLoading(false);
   };
@@ -165,7 +173,16 @@ export default function InvoicePage() {
                 <p><span className="text-gray-500">Phone:</span> {customer.phone || booking.guest_phone || "N/A"}</p>
                 <p><span className="text-gray-500">Passport:</span> {customer.passport_number || booking.guest_passport || "N/A"}</p>
                 <p><span className="text-gray-500">Address:</span> {customer.address || booking.guest_address || "N/A"}</p>
+                {(customer.email || booking.guest_email) && (
+                  <p><span className="text-gray-500">Email:</span> {customer.email || booking.guest_email}</p>
+                )}
+                {customer.moallem_name && (
+                  <p><span className="text-gray-500">Moallem:</span> {customer.moallem_name}</p>
+                )}
               </div>
+              {booking.notes && (
+                <p className="text-sm mt-2"><span className="text-gray-500">Notes:</span> {booking.notes}</p>
+              )}
             </div>
 
             {/* Package Info */}
