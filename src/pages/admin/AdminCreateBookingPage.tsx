@@ -117,6 +117,13 @@ export default function AdminCreateBookingPage() {
     if (!selectedCustomerId) { toast.error("Please select a customer"); return; }
     if (bookingType === "individual" && !form.package_id) { toast.error("Please select a package"); return; }
     if (bookingType === "family" && members.length === 0) { toast.error("Please add family members"); return; }
+    if (bookingType === "family") {
+      for (let i = 0; i < members.length; i++) {
+        if (!members[i].full_name.trim()) { toast.error(`Traveler ${i + 1}: Name is required`); return; }
+        if (!members[i].passport_number.trim()) { toast.error(`Traveler ${i + 1}: Passport number is required`); return; }
+        if (!members[i].package_id) { toast.error(`Traveler ${i + 1}: Package is required`); return; }
+      }
+    }
     if (totalSellingPrice <= 0) { toast.error("Total selling price must be greater than 0"); return; }
     if (form.paid_amount > totalSellingPrice) { toast.error("Paid amount cannot exceed total price"); return; }
 
