@@ -314,11 +314,7 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <select className={inputClass} value={form.wallet_account_id} onChange={e => setForm({ ...form, wallet_account_id: e.target.value })}>
-                  <option value="">Select Wallet</option>
-                  {walletAccounts.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({fmt(w.balance)})</option>)}
-                </select>
+              <div>
                 <input className={inputClass} type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               </div>
 
@@ -385,7 +381,7 @@ export default function DailyCashbook({ onEntriesChanged }: DailyCashbookProps =
                   </div>
                   <p className="font-medium text-sm truncate">{e.description}</p>
                   {e.notes && <p className="text-xs text-muted-foreground truncate">{e.notes}</p>}
-                  {e.wallet_account_id && <p className="text-[10px] text-muted-foreground">Wallet: {getWalletName(e.wallet_account_id)}</p>}
+                  
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <p className={`font-heading font-bold ${e.type === "income" ? "text-emerald" : "text-destructive"}`}>{fmt(e.amount)}</p>
