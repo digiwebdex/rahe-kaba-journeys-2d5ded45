@@ -29,9 +29,9 @@ const DEFAULT_ITEMS: CostItem[] = [
 const fmt = (n: number) => `BDT ${n.toLocaleString("en-IN")}`;
 
 export default function AdminCalculatorPage() {
-  const [groupName, setGroupName] = useState("");
+  const [groupName, setGroupName] = useState<string | null>(null);
   const [groupDate, setGroupDate] = useState("");
-  const [totalHajji, setTotalHajji] = useState(0);
+  const [totalHajji, setTotalHajji] = useState<number | null>(null);
   const [sellingPricePerPerson, setSellingPricePerPerson] = useState(0);
   const [items, setItems] = useState<CostItem[]>(DEFAULT_ITEMS);
 
@@ -48,19 +48,20 @@ export default function AdminCalculatorPage() {
   };
 
   const handleReset = () => {
-    setGroupName("");
+    setGroupName(null);
     setGroupDate("");
-    setTotalHajji(0);
+    setTotalHajji(null);
     setSellingPricePerPerson(0);
     setItems(DEFAULT_ITEMS.map(i => ({ ...i, unitPrice: 0 })));
     toast.success("ক্যালকুলেটর রিসেট হয়েছে");
   };
 
+  const pilgrimCount = totalHajji ?? 0;
   const costPerPerson = useMemo(() => items.reduce((s, i) => s + Number(i.unitPrice || 0), 0), [items]);
-  const totalCost = costPerPerson * totalHajji;
+  const totalCost = costPerPerson * pilgrimCount;
   const profitPerPerson = sellingPricePerPerson - costPerPerson;
-  const totalProfit = profitPerPerson * totalHajji;
-  const totalRevenue = sellingPricePerPerson * totalHajji;
+  const totalProfit = profitPerPerson * pilgrimCount;
+  const totalRevenue = sellingPricePerPerson * pilgrimCount;
 
   const handleDownloadPdf = async () => {
     try {
@@ -101,7 +102,7 @@ export default function AdminCalculatorPage() {
       const infoData = [
         ["Group Name", groupName || "-"],
         ["Date", groupDate || "-"],
-        ["Total Pilgrims", String(totalHajji)],
+        ["Total Pilgrims", pilgrimCount > 0 ? String(pilgrimCount) : "-"],
       ];
       (autoTable as any)(doc, {
         startY: y,
@@ -126,13 +127,13 @@ export default function AdminCalculatorPage() {
         String(idx + 1),
         item.description || "-",
         fmt(Number(item.unitPrice || 0)),
-        fmt(Number(item.unitPrice || 0) * totalHajji),
+        fmt(Number(item.unitPrice || 0) * pilgrimCount),
       ]);
       costRows.push(["", "Total Cost Per Person", fmt(costPerPerson), fmt(totalCost)]);
 
       (autoTable as any)(doc, {
         startY: y,
-        head: [["#", "Description", "Unit Price (BDT)", `Total (${totalHajji} pax)`]],
+        head: [["#", "Description", "Unit Price (BDT)", `Total (${pilgrimCount} pax)`]],
         body: costRows,
         theme: "grid",
         margin: { left: margin, right: margin },
@@ -162,18 +163,18 @@ export default function AdminCalculatorPage() {
       // Summary
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
-      doc.text(`Final Summary — ${groupName}`, margin, y);
+      doc.text(`Final Summary — ${groupName || "-"}`, margin, y);
       y += 4;
 
       const summaryRows = [
-        ["Total Pilgrims", String(totalHajji)],
+        ["Total Pilgrims", pilgrimCount > 0 ? String(pilgrimCount) : "-"],
         ["Cost Per Person", fmt(costPerPerson)],
         ["Selling Price Per Person", fmt(sellingPricePerPerson)],
         ["Profit Per Person", fmt(profitPerPerson)],
         ["", ""],
-        [`Total Cost (${totalHajji} × ${fmt(costPerPerson)})`, fmt(totalCost)],
-        [`Total Revenue (${totalHajji} × ${fmt(sellingPricePerPerson)})`, fmt(totalRevenue)],
-        [`Total Profit (${totalHajji} × ${fmt(profitPerPerson)})`, fmt(totalProfit)],
+        [`Total Cost (${pilgrimCount} × ${fmt(costPerPerson)})`, fmt(totalCost)],
+        [`Total Revenue (${pilgrimCount} × ${fmt(sellingPricePerPerson)})`, fmt(totalRevenue)],
+        [`Total Profit (${pilgrimCount} × ${fmt(profitPerPerson)})`, fmt(totalProfit)],
       ];
 
       (autoTable as any)(doc, {
@@ -221,7 +222,7 @@ export default function AdminCalculatorPage() {
         doc.setFontSize(8);
         doc.setTextColor(255);
         doc.setFont("helvetica", "normal");
-        doc.text("Alhamdulillah — Total Profit", pageWidth / 2, y + 5, { align: "center" });
+        doc.text("Total Profit", pageWidth / 2, y + 5, { align: "center" });
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text(fmt(totalProfit), pageWidth / 2, y + 12, { align: "center" });
@@ -235,7 +236,7 @@ export default function AdminCalculatorPage() {
       doc.setTextColor(140);
       doc.text("This is an estimate only. Actual costs may vary. | Rahe Kaba Travels & Tours", pageWidth / 2, footerY, { align: "center" });
 
-      const safeName = groupName.replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "Calculator";
+      const safeName = (groupName || "Calculator").replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-") || "Calculator";
       doc.save(`${safeName}-Cost-Report.pdf`);
       toast.success("PDF downloaded successfully!");
     } catch (err) {
@@ -245,16 +246,13 @@ export default function AdminCalculatorPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-heading font-bold flex items-center gap-2">
           <Calculator className="h-5 w-5 text-primary" />
           Group Cost Calculator
         </h1>
-        <Button size="sm" variant="outline" onClick={handleReset} className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10">
-          <RotateCcw className="h-4 w-4" /> Reset
-        </Button>
       </div>
 
       {/* Group Info */}
@@ -263,7 +261,7 @@ export default function AdminCalculatorPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <Label className="text-xs">Group Name</Label>
-            <Input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Group name" />
+            <Input value={groupName ?? ""} onChange={e => setGroupName(e.target.value || null)} placeholder="Group name" />
           </div>
           <div>
             <Label className="text-xs">Date</Label>
@@ -271,7 +269,11 @@ export default function AdminCalculatorPage() {
           </div>
           <div>
             <Label className="text-xs">Total Pilgrims</Label>
-            <Input type="number" value={totalHajji || ""} onChange={e => setTotalHajji(Number(e.target.value))} />
+            <Input
+              type="number"
+              value={totalHajji ?? ""}
+              onChange={e => setTotalHajji(e.target.value === "" ? null : Number(e.target.value))}
+            />
           </div>
         </div>
       </div>
@@ -315,7 +317,7 @@ export default function AdminCalculatorPage() {
                 />
               </div>
               <div className="col-span-2 flex items-center justify-between">
-                <span className="text-sm font-medium">{fmt(Number(item.unitPrice || 0) * totalHajji)}</span>
+                <span className="text-sm font-medium">{fmt(Number(item.unitPrice || 0) * pilgrimCount)}</span>
                 <button onClick={() => removeItem(item.id)} className="text-destructive/50 hover:text-destructive ml-1">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -351,13 +353,13 @@ export default function AdminCalculatorPage() {
       {/* Summary */}
       <div className="bg-card border border-primary/30 rounded-xl p-5">
         <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-          📊 Final Summary ({groupName})
+          📊 Final Summary ({groupName || "-"})
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="bg-secondary/30 rounded-lg p-3 text-center">
             <p className="text-[10px] uppercase text-muted-foreground mb-1">Total Pilgrims</p>
-            <p className="text-lg font-bold text-foreground">{totalHajji}</p>
+            <p className="text-lg font-bold text-foreground">{totalHajji ?? "-"}</p>
           </div>
           <div className="bg-secondary/30 rounded-lg p-3 text-center">
             <p className="text-[10px] uppercase text-muted-foreground mb-1">Cost Per Person</p>
@@ -375,22 +377,22 @@ export default function AdminCalculatorPage() {
 
         <div className="space-y-2 border-t border-border pt-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Cost ({totalHajji} × {fmt(costPerPerson)})</span>
+            <span className="text-muted-foreground">Total Cost ({pilgrimCount} × {fmt(costPerPerson)})</span>
             <span className="font-bold text-destructive">{fmt(totalCost)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Total Revenue ({totalHajji} × {fmt(sellingPricePerPerson)})</span>
+            <span className="text-muted-foreground">Total Revenue ({pilgrimCount} × {fmt(sellingPricePerPerson)})</span>
             <span className="font-bold text-primary">{fmt(totalRevenue)}</span>
           </div>
           <div className="flex justify-between text-sm border-t border-border pt-2">
-            <span className="font-bold">Total Profit ({totalHajji} × {fmt(profitPerPerson)})</span>
+            <span className="font-bold">Total Profit ({pilgrimCount} × {fmt(profitPerPerson)})</span>
             <span className={`text-lg font-bold ${totalProfit >= 0 ? "text-green-500" : "text-destructive"}`}>{fmt(totalProfit)}</span>
           </div>
         </div>
 
         {totalProfit > 0 && (
           <div className="mt-4 bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-center">
-            <p className="text-xs text-green-600">Alhamdulillah — Total Profit</p>
+            <p className="text-xs text-green-600">Total Profit</p>
             <p className="text-2xl font-bold text-green-500">{fmt(totalProfit)}</p>
           </div>
         )}
@@ -403,7 +405,7 @@ export default function AdminCalculatorPage() {
       </div>
 
       {/* PDF Download & Reset buttons */}
-      <div className="flex justify-center gap-3">
+      <div className="sticky bottom-0 z-10 -mx-2 px-2 py-3 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex justify-center gap-3">
         <Button size="lg" variant="outline" onClick={handleReset} className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10">
           <RotateCcw className="h-5 w-5" /> Reset
         </Button>
