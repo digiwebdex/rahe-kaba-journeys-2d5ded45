@@ -762,11 +762,17 @@ async function generateFamilyInvoice(
 // PUBLIC API
 // ═══════════════════════════════════════════════════════════════
 
+export interface GenerateInvoiceOptions {
+  members?: Partial<BookingMember>[];
+  forceFamily?: boolean;
+}
+
 export async function generateInvoice(
   booking: InvoiceBooking,
   customer: InvoiceCustomer,
   payments: InvoicePayment[],
-  company: CompanyInfo
+  company: CompanyInfo,
+  options: GenerateInvoiceOptions = {}
 ) {
   const doc = new jsPDF();
   await registerBengaliFont(doc);
@@ -782,18 +788,44 @@ export async function generateInvoice(
     moallemName = await fetchMoallemName(booking.moallem_id);
   }
 
-  const normalizedType = normalizeBookingType(booking.booking_type);
-  const dbMembers = booking.id ? await fetchBookingMembers(booking.id) : [];
-  const hasFamilySignal = normalizedType.includes("family") || Number(booking.num_travelers || 1) > 1 || dbMembers.length > 0;
-  const invoiceMembers = dbMembers.length > 0 ? dbMembers : (hasFamilySignal ? buildFallbackMembers(booking, customer) : []);
+  const fallbackPackageName = booking.packages?.name || "N/A";
+  const providedMembers = normalizeMembers(options.members || [], fallbackPackageName);
+  const dbMembers = providedMembers.length === 0 && booking.id
+    ? await fetchBookingMembers(booking.id, fallbackPackageName)
+    : [];
+
+  const travelerCount = Math.max(
+    Number(booking.num_travelers || 0),
+    providedMembers.length,
+    dbMembers.length,
+    1
+  );
+
+  const normalizedBooking: InvoiceBooking = {
+    ...booking,
+    num_travelers: travelerCount,
+  };
+
+  const normalizedType = normalizeBookingType(normalizedBooking.booking_type);
+  const hasFamilySignal = Boolean(options.forceFamily)
+    || normalizedType.includes("family")
+    || travelerCount > 1
+    || providedMembers.length > 0
+    || dbMembers.length > 0;
+
+  const invoiceMembers = providedMembers.length > 0
+    ? providedMembers
+    : dbMembers.length > 0
+      ? dbMembers
+      : (hasFamilySignal ? buildFallbackMembers(normalizedBooking, customer) : []);
 
   if (hasFamilySignal && invoiceMembers.length > 0) {
-    await generateFamilyInvoice(doc, booking, customer, payments, invoiceMembers, logoBase64, sig, qrDataUrl, moallemName);
+    await generateFamilyInvoice(doc, normalizedBooking, customer, payments, invoiceMembers, logoBase64, sig, qrDataUrl, moallemName);
   } else {
-    await generateIndividualInvoice(doc, booking, customer, payments, logoBase64, sig, qrDataUrl, moallemName);
+    await generateIndividualInvoice(doc, normalizedBooking, customer, payments, logoBase64, sig, qrDataUrl, moallemName);
   }
 
-  doc.save(`Invoice-${booking.tracking_id}.pdf`);
+  doc.save(`Invoice-${normalizedBooking.tracking_id}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════
